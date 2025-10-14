@@ -8,10 +8,14 @@ interface Stats {
   lastReset: number;
 }
 
+// Startwerte für Counter
+const INITIAL_VISITORS = 224232;
+const INITIAL_DOWNLOADS = 12231082;
+
 // In-Memory Stats (auf Vercel wird dies pro Serverless Function Instance sein)
 let stats: Stats = {
-  visitors: 0,
-  downloads: 0,
+  visitors: INITIAL_VISITORS,
+  downloads: INITIAL_DOWNLOADS,
   lastReset: Date.now(),
 };
 
@@ -37,12 +41,12 @@ export function getStats(): Stats {
 }
 
 /**
- * Setzt die Statistiken zurück
+ * Setzt die Statistiken zurück (behält aber die Basiswerte)
  */
 export function resetStats(): void {
   stats = {
-    visitors: 0,
-    downloads: 0,
+    visitors: INITIAL_VISITORS,
+    downloads: INITIAL_DOWNLOADS,
     lastReset: Date.now(),
   };
 }

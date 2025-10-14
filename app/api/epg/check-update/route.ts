@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getCacheInfo } from '@/lib/epg-service';
+import { getCacheInfo, loadEpgData, getEpgData } from '@/lib/epg-service';
 
 /**
  * API Route zum Prüfen und Triggern von EPG-Updates
  * POST /api/epg/check-update
  * 
- * Prüft ob ein Update nötig ist und gibt entsprechende Info zurück.
- * Triggert das Update im Hintergrund wenn nötig.
+ * Prüft ob ein Update nötig ist und triggert es direkt.
  */
 export async function POST() {
   try {
@@ -18,25 +17,39 @@ export async function POST() {
 
     let needsUpdate = false;
     let message = '';
+    let updateStarted = false;
 
     if (!cacheInfo.cached) {
-      // Cache ist leer - Update wird beim nächsten /api/epg Aufruf passieren
+      // Cache ist leer - Update direkt starten
       needsUpdate = true;
-      message = 'Cache ist leer. Daten werden beim nächsten EPG-Aufruf geladen.';
+      message = 'Cache ist leer. Starte Update...';
+      
+      // Direkter Aufruf der Update-Funktion (kein HTTP-Request)
+      loadEpgData()
+        .then(() => {
+          console.log('[EPG] Hintergrund-Update erfolgreich abgeschlossen');
+        })
+        .catch((error) => {
+          console.error('[EPG] Hintergrund-Update fehlgeschlagen:', error);
+        });
+      
+      updateStarted = true;
+      message = 'Cache wird geladen. Daten sind in Kürze verfügbar.';
     } else if (cacheInfo.age && cacheInfo.age >= revalidateSeconds * 1000) {
-      // Cache ist abgelaufen
+      // Cache ist abgelaufen - Daten neu laden
       needsUpdate = true;
-      message = `Cache ist abgelaufen (${cacheInfo.ageFormatted} alt). Update wird vorbereitet.`;
+      message = `Cache ist abgelaufen (${cacheInfo.ageFormatted} alt).`;
       
-      // Triggere Update im Hintergrund durch einen Aufruf an /api/epg
-      // Dies wird im Hintergrund ausgeführt ohne auf die Response zu warten
-      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-      fetch(`${baseUrl}/api/epg`, {
-        method: 'GET',
-      }).catch((error) => {
-        console.error('[EPG] Hintergrund-Update fehlgeschlagen:', error);
-      });
+      // Triggere Update direkt im Hintergrund
+      getEpgData()
+        .then(() => {
+          console.log('[EPG] Cache-Refresh erfolgreich');
+        })
+        .catch((error) => {
+          console.error('[EPG] Cache-Refresh fehlgeschlagen:', error);
+        });
       
+      updateStarted = true;
       message += ' Update im Hintergrund gestartet.';
     } else {
       message = `Cache ist aktuell (${cacheInfo.ageFormatted} alt).`;
@@ -46,6 +59,7 @@ export async function POST() {
       {
         success: true,
         needsUpdate,
+        updateStarted,
         message,
         cache: {
           active: cacheInfo.cached,
@@ -71,4 +85,5 @@ export async function POST() {
 }
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 60 Sekunden Timeout für Vercel
 

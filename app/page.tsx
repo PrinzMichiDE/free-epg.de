@@ -1,15 +1,34 @@
+'use client';
+
 import { StatsCard } from '@/components/stats-card';
-import { EpgStatus } from '@/components/epg-status';
-import { ApiEndpoints } from '@/components/api-endpoints';
 import { SupportBanner } from '@/components/support-banner';
 import { EpgAutoUpdater } from '@/components/epg-auto-updater';
+import { IptvLinkCard } from '@/components/iptv-link-card';
+import { FeaturesGrid } from '@/components/features-grid';
+import { TvPlayer } from '@/components/tv-player';
+import { UsefulFeatures } from '@/components/useful-features';
+import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
+import { QuickLinks } from '@/components/quick-links';
+import { PwaTvPlayer } from '@/components/pwa-tv-player';
+import { usePWAMode } from '@/components/pwa-detector';
 import { SignalIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 export default function HomePage() {
+  const isPWA = usePWAMode();
+
+  // Wenn PWA-Modus: Nur TV Player
+  if (isPWA) {
+    return <PwaTvPlayer />;
+  }
+
+  // Normale Website: Volle Homepage
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Auto-Update Checker */}
       <EpgAutoUpdater />
+      
+      {/* PWA Install Prompt */}
+      <PwaInstallPrompt />
       
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -37,45 +56,27 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Stats */}
+        {/* IPTV Link Card - Prominent */}
         <div className="mb-8">
+          <IptvLinkCard />
+        </div>
+
+        {/* Quick Links */}
+        <QuickLinks />
+
+        {/* Stats */}
+        <div id="stats" className="mb-8">
           <StatsCard />
         </div>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Left Column */}
-          <div className="space-y-8">
-            <EpgStatus />
-            
-            {/* Features */}
-            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
-              <h3 className="text-lg font-semibold text-white mb-4">Features</h3>
-              <div className="space-y-3">
-                {[
-                  'Mehrere EPG-Quellen (GlobeTV + EPGShare)',
-                  'Intelligentes Mergen & Deduplizierung',
-                  'Unterstützt .xml und .xml.gz',
-                  'Tägliche automatische Aktualisierung',
-                  'In-Memory Caching für Performance',
-                  'Optimiert für Vercel Edge Network',
-                ].map((feature, idx) => (
-                  <div key={idx} className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center mt-0.5">
-                      <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                    </div>
-                    <span className="text-slate-300 text-sm">{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+        {/* Features */}
+        <FeaturesGrid />
 
-          {/* Right Column */}
-          <div className="space-y-8">
-            <ApiEndpoints />
-          </div>
-        </div>
+        {/* Useful Features */}
+        <UsefulFeatures />
+
+        {/* TV Player */}
+        <TvPlayer />
 
         {/* Support Banner */}
         <SupportBanner />

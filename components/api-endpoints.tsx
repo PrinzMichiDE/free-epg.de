@@ -31,6 +31,12 @@ const endpoints: Endpoint[] = [
     color: 'amber',
   },
   {
+    method: 'POST',
+    path: '/api/epg/check-update',
+    description: 'Prüft und triggert automatische Updates',
+    color: 'purple',
+  },
+  {
     method: 'GET',
     path: '/api/stats',
     description: 'Gibt aktuelle Statistiken zurück',

@@ -7,10 +7,24 @@ Ein Next.js basierter EPG (Electronic Program Guide) Service, der täglich EPG-D
 - ✅ **Multi-Source EPG**: Automatisches Laden von mehreren EPG Quellen
 - ✅ **Format Support**: Unterstützung für .xml und .xml.gz Dateien
 - ✅ **Smart Merging**: Intelligentes Mergen mit Deduplizierung
-- ✅ **Auto-Update**: Tägliche automatische Aktualisierung
+- ✅ **Auto-Update**: Proaktive Updates beim Seitenaufruf (alle 24h)
+- ✅ **Background Updates**: Automatische Aktualisierung im Hintergrund
+- ✅ **Live TV Player**: Integrierter Player mit deutscher IPTV-Playlist
+- ✅ **HLS Streaming**: Unterstützung für HLS/M3U8 Streams
+- ✅ **Progressive Web App**: Installierbar auf allen Geräten
+- ✅ **Mobile Optimiert**: Touch-optimierte Bedienung für Smartphones
+- ✅ **Offline-Fähig**: Service Worker für Offline-Funktionalität
+- ✅ **Quick Links**: Schnellzugriff zu wichtigen Bereichen
+- ✅ **M3U Generator**: Erstellt vorkonfigurierte Playlist-Dateien
+- ✅ **QR-Code Generator**: Schnelles Teilen der EPG-URL via QR-Code
+- ✅ **Share-Funktionen**: WhatsApp, Telegram, E-Mail & mehr
+- ✅ **XML Download**: Lokaler Download der EPG-Daten
+- ✅ **XMLTV Config**: Konfigurationsdateien für Kodi
+- ✅ **Setup-Anleitungen**: Schritt-für-Schritt für beliebte IPTV-Apps
 - ✅ **High Performance**: In-Memory Caching & CDN Optimierung
 - ✅ **Modern UI**: Headless UI mit Framer Motion Animationen
 - ✅ **Statistics**: Besucher- und Download-Counter
+- ✅ **Live Notifications**: Visuelle Update-Benachrichtigungen
 - ✅ **TypeScript**: Vollständige Typsicherheit
 - ✅ **Production Ready**: Optimiert für Vercel Edge Network
 
@@ -22,6 +36,8 @@ Ein Next.js basierter EPG (Electronic Program Guide) Service, der täglich EPG-D
 - **UI Components**: Headless UI + Heroicons
 - **Animations**: Framer Motion
 - **Styling**: Tailwind CSS
+- **Video Streaming**: HLS.js
+- **QR-Code**: qrcode
 - **Dekomprimierung**: pako
 - **XML Processing**: fast-xml-parser
 
@@ -64,6 +80,31 @@ npm run dev
 ```
 
 Der Service ist dann unter `http://localhost:3000` verfügbar.
+
+## PWA Installation
+
+Die App kann als Progressive Web App auf allen Geräten installiert werden:
+
+### Desktop (Chrome/Edge)
+1. Öffne die Website
+2. Klicke auf das Install-Icon in der Adressleiste
+3. Oder: Menü → "App installieren"
+
+### Mobile (Android)
+1. Öffne die Website in Chrome
+2. Tippe auf das Menü (⋮)
+3. Wähle "Zum Startbildschirm hinzufügen"
+
+### Mobile (iOS)
+1. Öffne die Website in Safari
+2. Tippe auf das Teilen-Symbol
+3. Wähle "Zum Home-Bildschirm"
+
+Nach der Installation:
+- ✅ Schneller Zugriff vom Home-Screen
+- ✅ App läuft im Vollbild-Modus
+- ✅ Offline-Zugriff auf gecachte Inhalte
+- ✅ Push-Benachrichtigungen (zukünftig)
 
 ## API Endpoints
 
@@ -166,6 +207,36 @@ curl http://localhost:3000/api/stats
 }
 ```
 
+### POST /api/epg/check-update
+
+Prüft ob die EPG-Daten aktualisiert werden müssen und triggert ein Update im Hintergrund.
+
+**Response:**
+- Content-Type: `application/json`
+- Status: 200 (bei Erfolg) oder 500 (bei Fehler)
+
+**Beispiel:**
+
+```bash
+curl -X POST http://localhost:3000/api/epg/check-update
+```
+
+**Response Beispiel:**
+
+```json
+{
+  "success": true,
+  "needsUpdate": true,
+  "message": "Cache ist abgelaufen. Update im Hintergrund gestartet.",
+  "cache": {
+    "active": true,
+    "age": 90000000,
+    "ageFormatted": "25 Stunden",
+    "revalidateSeconds": 86400
+  }
+}
+```
+
 ## Deployment auf Vercel
 
 ### Automatisches Deployment
@@ -173,7 +244,7 @@ curl http://localhost:3000/api/stats
 1. Repository mit GitHub verbinden
 2. Auf Vercel importieren
 3. Optional: Umgebungsvariable setzen:
-   - `EPG_REVALIDATE_SECONDS` (Standard: 86400)
+   - `EPG_REVALIDATE_SECONDS` (Standard: 86400 = 24 Stunden)
 
 ### Manuelles Deployment
 
@@ -201,6 +272,16 @@ Der Service verwendet eine mehrstufige Caching-Strategie:
 5. Programme werden gesammelt und nach Startzeit sortiert
 6. Finales XML wird generiert und cached
 
+### Auto-Update System
+
+Das System prüft automatisch beim Seitenaufruf, ob die EPG-Daten aktualisiert werden müssen:
+
+1. **Beim Seitenaufruf**: Die `EpgAutoUpdater` Komponente prüft den Cache-Status
+2. **Cache-Check**: Wenn Daten älter als 24 Stunden → Update wird getriggert
+3. **Hintergrund-Update**: EPG-Daten werden neu geladen ohne Wartezeit
+4. **Notification**: Benutzer sieht eine Benachrichtigung während des Updates
+5. **Periodische Prüfung**: Alle 5 Minuten automatische Prüfung
+
 ### Dateistruktur
 
 ```
@@ -216,6 +297,8 @@ Der Service verwendet eine mehrstufige Caching-Strategie:
 │   │       ├── route.ts       # Statistik API
 │   │       └── visitor/
 │   │           └── route.ts   # Besucher-Counter
+│   │   └── check-update/
+│   │       └── route.ts       # Auto-Update Check
 │   ├── layout.tsx             # Root Layout
 │   ├── page.tsx               # Homepage
 │   └── globals.css            # Globale Styles
@@ -223,10 +306,24 @@ Der Service verwendet eine mehrstufige Caching-Strategie:
 │   ├── stats-card.tsx         # Statistik-Karten
 │   ├── epg-status.tsx         # EPG Status Display
 │   ├── api-endpoints.tsx      # API Endpoints Liste
-│   └── support-banner.tsx     # Support Banner
+│   ├── support-banner.tsx     # Support Banner
+│   ├── epg-auto-updater.tsx   # Auto-Update System
+│   ├── iptv-link-card.tsx     # IPTV URL Anzeige
+│   ├── features-grid.tsx      # Features Grid
+│   ├── quick-links.tsx        # Schnellzugriff-Links
+│   ├── useful-features.tsx    # Nützliche Tools (QR, Download, etc.)
+│   ├── m3u-generator.tsx      # M3U Playlist Generator
+│   ├── share-buttons.tsx      # Social Share Buttons
+│   ├── pwa-install-prompt.tsx # PWA Install-Aufforderung
+│   └── tv-player.tsx          # Live TV Player
 ├── lib/
 │   ├── epg-service.ts         # EPG Service Logik
-│   └── stats-service.ts       # Statistik Service
+│   ├── stats-service.ts       # Statistik Service
+│   └── m3u-parser.ts          # M3U Playlist Parser
+├── public/
+│   ├── manifest.json          # PWA Manifest
+│   ├── sw.js                  # Service Worker
+│   └── icon.svg               # App Icon
 ├── next.config.ts             # Next.js Konfiguration
 ├── tailwind.config.ts         # Tailwind Konfiguration
 ├── vercel.json                # Vercel Deployment Config
@@ -247,7 +344,7 @@ Der Service verwendet eine mehrstufige Caching-Strategie:
 
 Gefällt dir dieses Projekt? Unterstütze die Entwicklung:
 
-🎁 [Amazon Wunschzettel](https://www.amazon.de/hz/wishlist/ls/2K3UPHK4UWCXP?ref_=wl_share)
+🎁 [Amazon Wunschzettel](https://www.amazon.de/hz/wishlist/ls/2K3UPHK4UWCXP?type=wishlist&filter=all&sort=price-asc&viewType=list)
 
 ## Lizenz
 

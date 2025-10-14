@@ -82,7 +82,8 @@ async function loadSingleSource(url: string, compressed: boolean): Promise<strin
 
   try {
     const response = await fetch(url, {
-      next: { revalidate: 3600 }, // 1 Stunde Cache
+      // Kein Next.js Cache auf Vercel, um immer frische Daten zu bekommen
+      cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -185,6 +186,7 @@ function mergeEpgData(xmlDataArray: string[]): string {
  * Lädt alle EPG Quellen und merged sie
  */
 export async function loadEpgData(): Promise<string> {
+  const startTime = Date.now();
   console.log(`[EPG] Lade ${EPG_SOURCES.length} EPG Quellen...`);
 
   try {
@@ -198,7 +200,10 @@ export async function loadEpgData(): Promise<string> {
     // Daten mergen
     const mergedXml = mergeEpgData(xmlDataArray);
 
-    console.log(`[EPG] Erfolgreich geladen (${Math.round(mergedXml.length / 1024)} KB)`);
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(
+      `[EPG] Erfolgreich geladen in ${duration}s (${Math.round(mergedXml.length / 1024)} KB)`
+    );
 
     return mergedXml;
   } catch (error) {
