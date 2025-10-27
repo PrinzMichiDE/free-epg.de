@@ -19,10 +19,14 @@ import {
   ChevronRightIcon,
   ArrowPathIcon,
   ExclamationTriangleIcon,
+  WifiIcon,
+  SignalIcon,
+  DevicePhoneMobileIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { loadM3UPlaylist, Channel } from '@/lib/m3u-parser';
 import { getFavorites, toggleFavorite, isFavorite, addToHistory, getHistory } from '@/lib/favorites-storage';
+import { CastManager, AirPlayManager, CastState } from '@/lib/cast-manager';
 import Hls from 'hls.js';
 
 const PLAYLIST_URL = 'https://iptv-org.github.io/iptv/languages/deu.m3u';
@@ -56,6 +60,9 @@ export function PwaTvPlayerEnhanced() {
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [showGestureHint, setShowGestureHint] = useState<string | null>(null);
+  const [castState, setCastState] = useState<CastState>({ isCasting: false, deviceName: null, canControl: false });
+  const [isAirPlaying, setIsAirPlaying] = useState(false);
+  const [showCastMenu, setShowCastMenu] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -63,10 +70,20 @@ export function PwaTvPlayerEnhanced() {
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const lastTapRef = useRef<number>(0);
   const gestureTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const castManagerRef = useRef<CastManager | null>(null);
+  const airPlayManagerRef = useRef<AirPlayManager | null>(null);
 
   // Mount check
   useEffect(() => {
     setIsMounted(true);
+
+    // Initialize Cast Manager
+    if (typeof window !== 'undefined') {
+      castManagerRef.current = CastManager.getInstance();
+      castManagerRef.current.init((state) => {
+        setCastState(state);
+      });
+    }
   }, []);
 
   // Lade Playlist
@@ -122,6 +139,12 @@ export function PwaTvPlayerEnhanced() {
     setStreamLoading(true);
     setStreamError(null);
     setStreamInfo({});
+
+    // Initialize AirPlay Manager
+    if (!airPlayManagerRef.current) {
+      airPlayManagerRef.current = new AirPlayManager();
+      airPlayManagerRef.current.init(video, setIsAirPlaying);
+    }
 
     // Cleanup vorheriger HLS Instanz
     if (hlsRef.current) {
@@ -298,6 +321,17 @@ export function PwaTvPlayerEnhanced() {
       localStorage.setItem(LAST_CHANNEL_KEY, channel.id);
     }
     setStreamError(null);
+
+    // If casting, update cast content
+    if (castState.isCasting && castManagerRef.current) {
+      castManagerRef.current.stopCast().then(() => {
+        castManagerRef.current?.startCast(
+          channel.url,
+          channel.name,
+          channel.logo
+        );
+      });
+    }
   };
 
   const handleToggleFavorite = (channelId: string, e: React.MouseEvent) => {
@@ -375,6 +409,71 @@ export function PwaTvPlayerEnhanced() {
 
   const openWebsite = () => {
     window.open(window.location.origin, '_blank');
+  };
+
+  // Cast Functions
+  const handleCast = async () => {
+    if (!currentChannel) return;
+
+    try {
+      if (castState.isCasting) {
+        await castManagerRef.current?.stopCast();
+        showHint('❌ Cast beendet');
+      } else {
+        await castManagerRef.current?.startCast(
+          currentChannel.url,
+          currentChannel.name,
+          currentChannel.logo
+        );
+        showHint('📺 Casting gestartet');
+        triggerHaptic('medium');
+      }
+    } catch (error) {
+      console.error('Cast error:', error);
+      showHint('⚠️ Cast Fehler');
+    }
+  };
+
+  const handleAirPlay = () => {
+    if (airPlayManagerRef.current?.isAvailable()) {
+      airPlayManagerRef.current.showPicker();
+      triggerHaptic('medium');
+    }
+  };
+
+  // Remote Control Functions (when casting)
+  const remotePrevious = () => {
+    if (castState.isCasting && castState.canControl) {
+      previousChannel();
+      // Cast will be updated in handleChannelSelect
+    }
+  };
+
+  const remoteNext = () => {
+    if (castState.isCasting && castState.canControl) {
+      nextChannel();
+      // Cast will be updated in handleChannelSelect
+    }
+  };
+
+  const remotePlayPause = () => {
+    if (castState.isCasting && castManagerRef.current) {
+      if (videoRef.current?.paused) {
+        castManagerRef.current.play();
+        showHint('▶️ Play');
+      } else {
+        castManagerRef.current.pause();
+        showHint('⏸️ Pause');
+      }
+    }
+  };
+
+  const remoteVolumeChange = (delta: number) => {
+    if (castState.isCasting && castManagerRef.current) {
+      const newVolume = Math.max(0, Math.min(1, volume + delta));
+      setVolume(newVolume);
+      castManagerRef.current.setVolume(newVolume);
+    }
   };
 
   // Haptic Feedback
@@ -500,6 +599,24 @@ export function PwaTvPlayerEnhanced() {
         <div className="flex items-center space-x-2">
           {currentChannel && (
             <>
+              {/* Cast Button */}
+              <button
+                onClick={() => setShowCastMenu(!showCastMenu)}
+                className={`p-2 hover:bg-slate-700 rounded-lg transition-colors relative ${
+                  castState.isCasting || isAirPlaying ? 'text-emerald-400' : 'text-slate-400'
+                }`}
+                title="Cast to TV"
+              >
+                {castState.isCasting || isAirPlaying ? (
+                  <SignalIcon className="w-5 h-5" />
+                ) : (
+                  <WifiIcon className="w-5 h-5" />
+                )}
+                {(castState.isCasting || isAirPlaying) && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                )}
+              </button>
+
               {document.pictureInPictureEnabled && (
                 <button
                   onClick={togglePiP}
@@ -541,6 +658,60 @@ export function PwaTvPlayerEnhanced() {
         </div>
       </div>
 
+      {/* Cast Menu */}
+      <AnimatePresence>
+        {showCastMenu && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-16 right-4 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden"
+          >
+            <div className="p-2 space-y-1">
+              {/* Chromecast */}
+              <button
+                onClick={() => {
+                  handleCast();
+                  setShowCastMenu(false);
+                }}
+                className="w-full px-4 py-3 text-left hover:bg-slate-700 rounded-lg transition-colors flex items-center space-x-3 touch-manipulation"
+              >
+                <WifiIcon className={`w-5 h-5 ${castState.isCasting ? 'text-emerald-400' : 'text-slate-400'}`} />
+                <div>
+                  <p className="text-white text-sm font-medium">
+                    {castState.isCasting ? 'Chromecast trennen' : 'Chromecast'}
+                  </p>
+                  {castState.deviceName && (
+                    <p className="text-emerald-400 text-xs">{castState.deviceName}</p>
+                  )}
+                </div>
+              </button>
+
+              {/* AirPlay */}
+              {airPlayManagerRef.current?.isAvailable() && (
+                <button
+                  onClick={() => {
+                    handleAirPlay();
+                    setShowCastMenu(false);
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-slate-700 rounded-lg transition-colors flex items-center space-x-3 touch-manipulation"
+                >
+                  <SignalIcon className={`w-5 h-5 ${isAirPlaying ? 'text-emerald-400' : 'text-slate-400'}`} />
+                  <div>
+                    <p className="text-white text-sm font-medium">
+                      {isAirPlaying ? 'AirPlay aktiv' : 'AirPlay'}
+                    </p>
+                    {isAirPlaying && (
+                      <p className="text-emerald-400 text-xs">Streaming...</p>
+                    )}
+                  </div>
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Video Player */}
       <div 
         className="flex-1 bg-black relative"
@@ -549,6 +720,104 @@ export function PwaTvPlayerEnhanced() {
       >
         {currentChannel ? (
           <>
+            {/* Remote Control Mode */}
+            {(castState.isCasting || isAirPlaying) && (
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 z-20 flex items-center justify-center">
+                <div className="text-center p-8 max-w-md">
+                  <DevicePhoneMobileIcon className="w-20 h-20 text-emerald-400 mx-auto mb-6 animate-pulse" />
+                  <h3 className="text-2xl font-bold text-white mb-2">Fernbedienungs-Modus</h3>
+                  <p className="text-slate-400 mb-6">
+                    {castState.deviceName || 'TV'} steuern
+                  </p>
+                  
+                  {/* Remote Control Buttons */}
+                  <div className="space-y-4">
+                    {/* Channel Navigation */}
+                    <div className="flex items-center justify-center space-x-4">
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={remotePrevious}
+                        className="p-6 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-full transition-colors touch-manipulation"
+                      >
+                        <ChevronLeftIcon className="w-8 h-8 text-white" />
+                      </motion.button>
+                      
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={remotePlayPause}
+                        className="p-8 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 rounded-full transition-colors touch-manipulation"
+                      >
+                        <PlayIcon className="w-10 h-10 text-white" />
+                      </motion.button>
+                      
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={remoteNext}
+                        className="p-6 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 rounded-full transition-colors touch-manipulation"
+                      >
+                        <ChevronRightIcon className="w-8 h-8 text-white" />
+                      </motion.button>
+                    </div>
+
+                    {/* Volume Control */}
+                    <div className="bg-slate-800/50 rounded-lg p-4">
+                      <p className="text-slate-400 text-sm mb-3">Lautstärke</p>
+                      <div className="flex items-center space-x-4">
+                        <button
+                          onClick={() => remoteVolumeChange(-0.1)}
+                          className="p-3 bg-slate-700 hover:bg-slate-600 rounded-lg touch-manipulation"
+                        >
+                          <span className="text-white text-xl">-</span>
+                        </button>
+                        <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-emerald-500 rounded-full transition-all"
+                            style={{ width: `${volume * 100}%` }}
+                          />
+                        </div>
+                        <button
+                          onClick={() => remoteVolumeChange(0.1)}
+                          className="p-3 bg-slate-700 hover:bg-slate-600 rounded-lg touch-manipulation"
+                        >
+                          <span className="text-white text-xl">+</span>
+                        </button>
+                      </div>
+                      <p className="text-white text-center mt-2 font-bold">{Math.round(volume * 100)}%</p>
+                    </div>
+
+                    {/* Current Channel Info */}
+                    <div className="bg-slate-800/50 rounded-lg p-4 flex items-center space-x-3">
+                      {currentChannel.logo && (
+                        <img 
+                          src={currentChannel.logo} 
+                          alt={currentChannel.name}
+                          className="w-12 h-12 object-contain rounded"
+                        />
+                      )}
+                      <div className="flex-1 text-left">
+                        <p className="text-white font-medium">{currentChannel.name}</p>
+                        {currentChannel.group && (
+                          <p className="text-slate-400 text-sm">{currentChannel.group}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Stop Casting */}
+                    <button
+                      onClick={() => {
+                        if (castState.isCasting) {
+                          castManagerRef.current?.stopCast();
+                        }
+                      }}
+                      className="w-full px-6 py-3 bg-red-500/20 border border-red-500 text-red-400 hover:bg-red-500/30 rounded-lg font-semibold transition-colors touch-manipulation"
+                    >
+                      Cast beenden
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <video
               ref={videoRef}
               className="w-full h-full"

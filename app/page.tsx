@@ -17,6 +17,7 @@ import { usePWAMode } from '@/components/pwa-detector';
 import { EpgPreviewCard } from '@/components/epg-preview';
 import { FaqSection } from '@/components/faq-section';
 import { PerformanceMetrics } from '@/components/performance-metrics';
+import { AdSenseBanner } from '@/components/adsense-banner';
 import { SignalIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 export default function HomePage() {
@@ -62,6 +63,15 @@ export default function HomePage() {
           </p>
         </div>
 
+        {/* AdSense Banner - Top */}
+        <div className="mb-8">
+          <AdSenseBanner 
+            adSlot="1234567890"
+            adFormat="auto"
+            className="max-w-4xl mx-auto"
+          />
+        </div>
+
         {/* IPTV Link Card - Prominent */}
         <div className="mb-8">
           <IptvLinkCard />
@@ -81,6 +91,15 @@ export default function HomePage() {
         {/* Performance Metrics */}
         <PerformanceMetrics />
 
+        {/* AdSense Banner - Middle */}
+        <div className="mb-8">
+          <AdSenseBanner 
+            adSlot="1234567891"
+            adFormat="auto"
+            className="max-w-4xl mx-auto"
+          />
+        </div>
+
         {/* Features */}
         <FeaturesGrid />
 
@@ -90,11 +109,29 @@ export default function HomePage() {
         {/* TV Player Ultra */}
         <TvPlayerUltra />
 
+        {/* AdSense Banner - After TV Player */}
+        <div className="mb-8">
+          <AdSenseBanner 
+            adSlot="1234567892"
+            adFormat="auto"
+            className="max-w-4xl mx-auto"
+          />
+        </div>
+
         {/* FAQ Section */}
         <FaqSection />
 
         {/* Support Banner */}
         <SupportBanner />
+
+        {/* AdSense Banner - Bottom */}
+        <div className="mb-8">
+          <AdSenseBanner 
+            adSlot="1234567893"
+            adFormat="auto"
+            className="max-w-4xl mx-auto"
+          />
+        </div>
 
         {/* Footer */}
         <footer className="mt-12 text-center text-slate-500 text-sm">
