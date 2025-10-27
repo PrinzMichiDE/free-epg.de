@@ -33,19 +33,26 @@ self.addEventListener('activate', (event) => {
 
 // Fetch Strategy: Network First, fallback to Cache
 self.addEventListener('fetch', (event) => {
-  // Skip für externe URLs und API-Calls
+  // Skip für externe URLs
   if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
+  // Cache nur GET-Requests (POST, PUT, DELETE nicht cachen)
+  if (event.request.method !== 'GET') {
     return;
   }
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone response für Cache
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
+        // Nur erfolgreiche Responses cachen
+        if (response && response.status === 200) {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
         return response;
       })
       .catch(() => {

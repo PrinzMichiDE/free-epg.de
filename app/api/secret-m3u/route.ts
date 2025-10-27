@@ -13,10 +13,10 @@ export async function GET() {
   }
 
   try {
-    // Konvertiere Dropbox-URLs zu Direct Download URLs
+    // Konvertiere Dropbox-URLs zu Direct Download URLs falls nötig
     let downloadUrl = secretM3uUrl;
-    if (downloadUrl.includes('dropbox.com')) {
-      // Ersetze www.dropbox.com mit dl.dropboxusercontent.com für direkte Downloads
+    if (downloadUrl.includes('dropbox.com') && !downloadUrl.includes('dropboxusercontent.com')) {
+      // Nur konvertieren wenn es eine www.dropbox.com URL ist
       downloadUrl = downloadUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
       // Stelle sicher, dass dl=1 gesetzt ist
       downloadUrl = downloadUrl.replace('dl=0', 'dl=1');
@@ -24,6 +24,7 @@ export async function GET() {
         downloadUrl += downloadUrl.includes('?') ? '&dl=1' : '?dl=1';
       }
     }
+    // Für dropboxusercontent.com URLs: direkt verwenden (bereits im richtigen Format)
 
     // Lade M3U von Dropbox
     const response = await fetch(downloadUrl, {
