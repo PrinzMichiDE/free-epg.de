@@ -1,8 +1,9 @@
 import { SecretTvPlayer } from '@/components/secret-tv-player';
 
 export default function TvSecretPage() {
-  // Lese Environment-Variable serverseitig
+  // Lese Environment-Variablen serverseitig
   const secretM3uUrl = process.env.SECRETM3U;
+  const requiredPin = process.env.PIN_SEC;
 
   // Fallback wenn die Variable nicht gesetzt ist
   if (!secretM3uUrl) {
@@ -25,6 +26,7 @@ export default function TvSecretPage() {
     );
   }
 
-  return <SecretTvPlayer playlistUrl={secretM3uUrl} />;
+  // Verwende API-Route statt direkter URL (für Dropbox-Kompatibilität)
+  return <SecretTvPlayer playlistUrl="/api/secret-m3u" requiredPin={requiredPin} />;
 }
 

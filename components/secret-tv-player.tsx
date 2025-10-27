@@ -19,9 +19,11 @@ import {
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { loadM3UPlaylist, Channel } from '@/lib/m3u-parser';
 import { getFavorites, toggleFavorite, isFavorite, addToHistory, getHistory } from '@/lib/favorites-storage';
+import { PinLock } from '@/components/pin-lock';
 import Hls from 'hls.js';
 
 const LAST_CHANNEL_KEY = 'epg_secret_last_channel';
+const AUTH_KEY = 'epg_secret_auth';
 
 type FilterType = 'all' | 'favorites' | 'recent';
 
@@ -33,9 +35,11 @@ interface StreamInfo {
 
 interface SecretTvPlayerProps {
   playlistUrl: string;
+  requiredPin?: string;
 }
 
-export function SecretTvPlayer({ playlistUrl }: SecretTvPlayerProps) {
+export function SecretTvPlayer({ playlistUrl, requiredPin }: SecretTvPlayerProps) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,6 +59,31 @@ export function SecretTvPlayer({ playlistUrl }: SecretTvPlayerProps) {
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+
+  // Check authentication on mount
+  useEffect(() => {
+    if (!requiredPin) {
+      // Kein PIN erforderlich, direkt authentifiziert
+      setIsAuthenticated(true);
+      return;
+    }
+
+    // Prüfe ob bereits authentifiziert (in dieser Session)
+    const authStatus = sessionStorage.getItem(AUTH_KEY);
+    if (authStatus === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, [requiredPin]);
+
+  const handleUnlock = () => {
+    setIsAuthenticated(true);
+    sessionStorage.setItem(AUTH_KEY, 'true');
+  };
+
+  // Zeige PIN-Lock wenn PIN erforderlich und nicht authentifiziert
+  if (requiredPin && !isAuthenticated) {
+    return <PinLock onUnlock={handleUnlock} requiredPin={requiredPin} />;
+  }
 
   // Lade Playlist
   useEffect(() => {
