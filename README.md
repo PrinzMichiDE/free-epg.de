@@ -111,10 +111,14 @@ Die App kann als Progressive Web App auf allen Geräten installiert werden:
 3. Wähle "Zum Home-Bildschirm"
 
 Nach der Installation:
-- ✅ Schneller Zugriff vom Home-Screen
-- ✅ App läuft im Vollbild-Modus
-- ✅ Offline-Zugriff auf gecachte Inhalte
-- ✅ Push-Benachrichtigungen (zukünftig)
+- ✅ **Reines Live TV Erlebnis** - Nur der Enhanced TV Player ohne EPG-Service-Informationen
+- ✅ **Favoriten & History** - Deine Lieblingssender immer griffbereit
+- ✅ **Keyboard Shortcuts** - Space, M, F, P für schnelle Steuerung
+- ✅ **Picture-in-Picture** - Multitasking beim TV schauen
+- ✅ **Kategorie-Filter** - Schnelles Finden von Sendern nach Genre
+- ✅ **Vollbild-Modus** - Optimales Seherlebnis
+- ✅ **Schneller Zugriff** vom Home-Screen
+- ✅ **Offline-Zugriff** auf gecachte Inhalte
 
 ## API Endpoints
 
