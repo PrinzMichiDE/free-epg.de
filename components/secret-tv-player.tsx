@@ -40,7 +40,6 @@ interface SecretTvPlayerProps {
 
 export function SecretTvPlayer({ playlistUrl, requiredPin }: SecretTvPlayerProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,8 +62,6 @@ export function SecretTvPlayer({ playlistUrl, requiredPin }: SecretTvPlayerProps
 
   // Check authentication on mount
   useEffect(() => {
-    setIsMounted(true);
-    
     if (!requiredPin) {
       // Kein PIN erforderlich, direkt authentifiziert
       setIsAuthenticated(true);
@@ -72,35 +69,16 @@ export function SecretTvPlayer({ playlistUrl, requiredPin }: SecretTvPlayerProps
     }
 
     // Prüfe ob bereits authentifiziert (in dieser Session)
-    if (typeof window !== 'undefined') {
-      const authStatus = sessionStorage.getItem(AUTH_KEY);
-      if (authStatus === 'true') {
-        setIsAuthenticated(true);
-      }
+    const authStatus = sessionStorage.getItem(AUTH_KEY);
+    if (authStatus === 'true') {
+      setIsAuthenticated(true);
     }
   }, [requiredPin]);
 
   const handleUnlock = () => {
     setIsAuthenticated(true);
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem(AUTH_KEY, 'true');
-    }
+    sessionStorage.setItem(AUTH_KEY, 'true');
   };
-
-  // Verhindere Hydration-Fehler während SSR
-  if (!isMounted) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative">
-            <TvIcon className="w-16 h-16 text-emerald-400 mx-auto mb-4 animate-pulse" />
-            <LockClosedIcon className="w-6 h-6 text-emerald-300 absolute top-0 right-0" />
-          </div>
-          <p className="text-white text-lg">Lade...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Zeige PIN-Lock wenn PIN erforderlich und nicht authentifiziert
   if (requiredPin && !isAuthenticated) {

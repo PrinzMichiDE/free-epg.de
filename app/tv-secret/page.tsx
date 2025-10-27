@@ -1,4 +1,4 @@
-import { SecretTvPlayer } from '@/components/secret-tv-player';
+import { SecretTvPlayerWrapper } from '@/components/secret-tv-player-wrapper';
 
 export default function TvSecretPage() {
   // Lese Environment-Variablen serverseitig
@@ -27,6 +27,6 @@ export default function TvSecretPage() {
   }
 
   // Verwende API-Route statt direkter URL (für Dropbox-Kompatibilität)
-  return <SecretTvPlayer playlistUrl="/api/secret-m3u" requiredPin={requiredPin} />;
+  return <SecretTvPlayerWrapper playlistUrl="/api/secret-m3u" requiredPin={requiredPin} />;
 }
 
