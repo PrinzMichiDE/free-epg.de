@@ -21,9 +21,12 @@ export function UsefulFeatures() {
   const [showQr, setShowQr] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string>('');
   const [downloading, setDownloading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    setIsMounted(true);
+    
     // EPG URL setzen
     if (typeof window !== 'undefined') {
       const url = `${window.location.origin}/api/epg`;

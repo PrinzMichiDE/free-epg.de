@@ -13,10 +13,13 @@ export function PwaInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
+    
     // Prüfe ob bereits installiert
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
       return;
     }
@@ -73,6 +76,9 @@ export function PwaInstallPrompt() {
     localStorage.setItem('pwa-dismissed', Date.now().toString());
   };
 
+  // Verhindere Hydration-Fehler während SSR
+  if (!isMounted) return null;
+  
   // Zeige nichts wenn bereits installiert
   if (isInstalled) return null;
 
