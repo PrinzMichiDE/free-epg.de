@@ -15,6 +15,10 @@ import {
   ArrowsPointingOutIcon,
   SpeakerWaveIcon,
   SpeakerXMarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ArrowPathIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { loadM3UPlaylist, Channel } from '@/lib/m3u-parser';
@@ -22,13 +26,22 @@ import { getFavorites, toggleFavorite, isFavorite, addToHistory, getHistory } fr
 import Hls from 'hls.js';
 
 const PLAYLIST_URL = 'https://iptv-org.github.io/iptv/languages/deu.m3u';
+const LAST_CHANNEL_KEY = 'epg_last_channel';
 
 type FilterType = 'all' | 'favorites' | 'recent';
+
+interface StreamInfo {
+  bitrate?: string;
+  resolution?: string;
+  codec?: string;
+}
 
 export function PwaTvPlayerEnhanced() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
   const [loading, setLoading] = useState(true);
+  const [streamLoading, setStreamLoading] = useState(false);
+  const [streamError, setStreamError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showMenu, setShowMenu] = useState(false);
   const [filter, setFilter] = useState<FilterType>('all');
@@ -36,11 +49,15 @@ export function PwaTvPlayerEnhanced() {
   const [history, setHistory] = useState<string[]>([]);
   const [isPiP, setIsPiP] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(1);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [streamInfo, setStreamInfo] = useState<StreamInfo>({});
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const volumeTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Lade Playlist
   useEffect(() => {
@@ -58,6 +75,15 @@ export function PwaTvPlayerEnhanced() {
           )
         );
         setCategories(cats);
+
+        // Restore last channel
+        const lastChannelId = localStorage.getItem(LAST_CHANNEL_KEY);
+        if (lastChannelId) {
+          const lastChannel = channelList.find(ch => ch.id === lastChannelId);
+          if (lastChannel) {
+            setCurrentChannel(lastChannel);
+          }
+        }
       } catch (error) {
         console.error('Fehler beim Laden der Channels:', error);
       } finally {
@@ -74,11 +100,14 @@ export function PwaTvPlayerEnhanced() {
     setHistory(getHistory());
   }, []);
 
-  // Video Player Setup
+  // Video Player Setup with Error Handling
   useEffect(() => {
     if (!currentChannel || !videoRef.current) return;
 
     const video = videoRef.current;
+    setStreamLoading(true);
+    setStreamError(null);
+    setStreamInfo({});
 
     // Cleanup vorheriger HLS Instanz
     if (hlsRef.current) {
@@ -92,22 +121,75 @@ export function PwaTvPlayerEnhanced() {
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: true,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 60,
         });
         hlsRef.current = hls;
+        
+        hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+          setStreamLoading(false);
+          video.play().catch((err) => {
+            console.log('Autoplay verhindert:', err);
+            setStreamError('Autoplay blockiert. Bitte Play drücken.');
+          });
+          
+          // Stream Info
+          if (data.levels && data.levels.length > 0) {
+            const level = data.levels[0];
+            setStreamInfo({
+              bitrate: `${Math.round(level.bitrate / 1000)} kbps`,
+              resolution: `${level.width}x${level.height}`,
+              codec: level.videoCodec || 'H.264',
+            });
+          }
+        });
+
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            setStreamLoading(false);
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                setStreamError('Netzwerkfehler. Versuche neu zu verbinden...');
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                setStreamError('Medienfehler. Versuche Wiederherstellung...');
+                hls.recoverMediaError();
+                break;
+              default:
+                setStreamError('Stream konnte nicht geladen werden.');
+                break;
+            }
+          }
+        });
+
         hls.loadSource(currentChannel.url);
         hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          video.play().catch((err) => console.log('Autoplay verhindert:', err));
-        });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = currentChannel.url;
         video.addEventListener('loadedmetadata', () => {
-          video.play().catch((err) => console.log('Autoplay verhindert:', err));
+          setStreamLoading(false);
+          video.play().catch((err) => {
+            console.log('Autoplay verhindert:', err);
+            setStreamError('Autoplay blockiert. Bitte Play drücken.');
+          });
+        });
+        video.addEventListener('error', () => {
+          setStreamLoading(false);
+          setStreamError('Stream konnte nicht geladen werden.');
         });
       }
     } else {
       video.src = currentChannel.url;
-      video.play().catch((err) => console.log('Autoplay verhindert:', err));
+      video.addEventListener('loadeddata', () => setStreamLoading(false));
+      video.addEventListener('error', () => {
+        setStreamLoading(false);
+        setStreamError('Stream konnte nicht geladen werden.');
+      });
+      video.play().catch((err) => {
+        console.log('Autoplay verhindert:', err);
+        setStreamError('Autoplay blockiert. Bitte Play drücken.');
+      });
     }
 
     return () => {
@@ -142,12 +224,28 @@ export function PwaTvPlayerEnhanced() {
             togglePiP();
           }
           break;
+        case 'arrowup':
+          e.preventDefault();
+          adjustVolume(0.1);
+          break;
+        case 'arrowdown':
+          e.preventDefault();
+          adjustVolume(-0.1);
+          break;
+        case 'arrowright':
+          e.preventDefault();
+          nextChannel();
+          break;
+        case 'arrowleft':
+          e.preventDefault();
+          previousChannel();
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
+  }, [currentChannel, channels]);
 
   const filteredChannels = channels.filter((channel) => {
     const matchesSearch = channel.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -170,11 +268,20 @@ export function PwaTvPlayerEnhanced() {
     return a.name.localeCompare(b.name);
   });
 
+  // Volume Control
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.volume = volume;
+    }
+  }, [volume]);
+
   const handleChannelSelect = (channel: Channel) => {
     setCurrentChannel(channel);
     setShowMenu(false);
     addToHistory(channel.id);
     setHistory(getHistory());
+    localStorage.setItem(LAST_CHANNEL_KEY, channel.id);
+    setStreamError(null);
   };
 
   const handleToggleFavorite = (channelId: string, e: React.MouseEvent) => {
@@ -188,6 +295,19 @@ export function PwaTvPlayerEnhanced() {
       videoRef.current.muted = !videoRef.current.muted;
       setIsMuted(videoRef.current.muted);
     }
+  };
+
+  const adjustVolume = (delta: number) => {
+    const newVolume = Math.max(0, Math.min(1, volume + delta));
+    setVolume(newVolume);
+    setShowVolumeSlider(true);
+    
+    if (volumeTimeoutRef.current) {
+      clearTimeout(volumeTimeoutRef.current);
+    }
+    volumeTimeoutRef.current = setTimeout(() => {
+      setShowVolumeSlider(false);
+    }, 2000);
   };
 
   const toggleFullscreen = () => {
@@ -212,6 +332,28 @@ export function PwaTvPlayerEnhanced() {
       }
     } catch (error) {
       console.error('PiP Fehler:', error);
+    }
+  };
+
+  const nextChannel = () => {
+    if (!currentChannel || sortedChannels.length === 0) return;
+    const currentIndex = sortedChannels.findIndex(ch => ch.id === currentChannel.id);
+    const nextIndex = (currentIndex + 1) % sortedChannels.length;
+    handleChannelSelect(sortedChannels[nextIndex]);
+  };
+
+  const previousChannel = () => {
+    if (!currentChannel || sortedChannels.length === 0) return;
+    const currentIndex = sortedChannels.findIndex(ch => ch.id === currentChannel.id);
+    const prevIndex = (currentIndex - 1 + sortedChannels.length) % sortedChannels.length;
+    handleChannelSelect(sortedChannels[prevIndex]);
+  };
+
+  const retryStream = () => {
+    if (currentChannel) {
+      const temp = currentChannel;
+      setCurrentChannel(null);
+      setTimeout(() => setCurrentChannel(temp), 100);
     }
   };
 
