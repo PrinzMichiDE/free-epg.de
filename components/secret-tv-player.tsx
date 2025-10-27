@@ -40,6 +40,7 @@ interface SecretTvPlayerProps {
 
 export function SecretTvPlayer({ playlistUrl, requiredPin }: SecretTvPlayerProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,8 +61,15 @@ export function SecretTvPlayer({ playlistUrl, requiredPin }: SecretTvPlayerProps
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
 
+  // Mount check
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Check authentication on mount
   useEffect(() => {
+    if (!isMounted) return;
+    
     if (!requiredPin) {
       // Kein PIN erforderlich, direkt authentifiziert
       setIsAuthenticated(true);
@@ -73,7 +81,7 @@ export function SecretTvPlayer({ playlistUrl, requiredPin }: SecretTvPlayerProps
     if (authStatus === 'true') {
       setIsAuthenticated(true);
     }
-  }, [requiredPin]);
+  }, [requiredPin, isMounted]);
 
   const handleUnlock = () => {
     setIsAuthenticated(true);
@@ -87,6 +95,8 @@ export function SecretTvPlayer({ playlistUrl, requiredPin }: SecretTvPlayerProps
 
   // Lade Playlist
   useEffect(() => {
+    if (!isMounted) return;
+    
     const loadChannels = async () => {
       try {
         const channelList = await loadM3UPlaylist(playlistUrl);
@@ -118,13 +128,14 @@ export function SecretTvPlayer({ playlistUrl, requiredPin }: SecretTvPlayerProps
     };
 
     loadChannels();
-  }, [playlistUrl]);
+  }, [playlistUrl, isMounted]);
 
   // Load favorites and history
   useEffect(() => {
+    if (!isMounted) return;
     setFavorites(getFavorites());
     setHistory(getHistory());
-  }, []);
+  }, [isMounted]);
 
   // Video Player Setup
   useEffect(() => {

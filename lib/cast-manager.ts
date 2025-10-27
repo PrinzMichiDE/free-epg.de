@@ -71,90 +71,142 @@ export class CastManager {
   }
 
   async startCast(videoUrl: string, title: string, poster?: string) {
+    if (typeof window === 'undefined') {
+      throw new Error('Window not available');
+    }
+
+    if (!window.cast) {
+      throw new Error('Cast API not loaded');
+    }
+
     if (!window.chrome?.cast?.isAvailable) {
       throw new Error('Cast API not available');
     }
 
     return new Promise((resolve, reject) => {
-      const cast = window.cast;
-      cast.requestSession(
-        (session: any) => {
-          this.session = session;
-          this.loadMedia(videoUrl, title, poster);
-          resolve(session);
-        },
-        (error: any) => {
-          reject(error);
-        }
-      );
+      try {
+        const cast = window.cast;
+        cast.requestSession(
+          (session: any) => {
+            this.session = session;
+            this.loadMedia(videoUrl, title, poster);
+            resolve(session);
+          },
+          (error: any) => {
+            console.error('Cast session error:', error);
+            reject(error);
+          }
+        );
+      } catch (error) {
+        console.error('Cast start error:', error);
+        reject(error);
+      }
     });
   }
 
   private loadMedia(url: string, title: string, poster?: string) {
-    if (!this.session) return;
-
-    const mediaInfo = new window.cast.media.MediaInfo(url, 'application/x-mpegurl');
-    mediaInfo.metadata = new window.cast.media.GenericMediaMetadata();
-    mediaInfo.metadata.title = title;
-    if (poster) {
-      mediaInfo.metadata.images = [new window.cast.Image(poster)];
+    if (!this.session) {
+      console.error('No active session');
+      return;
     }
 
-    const request = new window.cast.media.LoadRequest(mediaInfo);
-    
-    this.session.loadMedia(
-      request,
-      (media: any) => {
-        console.log('Media loaded on cast device');
-        this.notifyStateChange({
-          isCasting: true,
-          deviceName: this.session.receiver.friendlyName,
-          canControl: true,
-        });
-      },
-      (error: any) => {
-        console.error('Error loading media:', error);
+    if (!window.cast) {
+      console.error('Cast API not available');
+      return;
+    }
+
+    try {
+      const mediaInfo = new window.cast.media.MediaInfo(url, 'application/x-mpegurl');
+      mediaInfo.metadata = new window.cast.media.GenericMediaMetadata();
+      mediaInfo.metadata.title = title;
+      if (poster) {
+        mediaInfo.metadata.images = [new window.cast.Image(poster)];
       }
-    );
+
+      const request = new window.cast.media.LoadRequest(mediaInfo);
+      
+      this.session.loadMedia(
+        request,
+        (media: any) => {
+          console.log('Media loaded on cast device');
+          this.notifyStateChange({
+            isCasting: true,
+            deviceName: this.session.receiver.friendlyName,
+            canControl: true,
+          });
+        },
+        (error: any) => {
+          console.error('Error loading media:', error);
+          this.notifyStateChange({
+            isCasting: false,
+            deviceName: null,
+            canControl: false,
+          });
+        }
+      );
+    } catch (error) {
+      console.error('Load media exception:', error);
+    }
   }
 
   async stopCast() {
     if (this.session) {
-      await this.session.stop();
-      this.session = null;
-      this.notifyStateChange({
-        isCasting: false,
-        deviceName: null,
-        canControl: false,
-      });
+      try {
+        await this.session.stop();
+      } catch (error) {
+        console.error('Error stopping cast:', error);
+      } finally {
+        this.session = null;
+        this.notifyStateChange({
+          isCasting: false,
+          deviceName: null,
+          canControl: false,
+        });
+      }
     }
   }
 
   play() {
-    if (this.session?.media?.[0]) {
-      this.session.media[0].play();
+    try {
+      if (this.session?.media?.[0]) {
+        this.session.media[0].play();
+      }
+    } catch (error) {
+      console.error('Play error:', error);
     }
   }
 
   pause() {
-    if (this.session?.media?.[0]) {
-      this.session.media[0].pause();
+    try {
+      if (this.session?.media?.[0]) {
+        this.session.media[0].pause();
+      }
+    } catch (error) {
+      console.error('Pause error:', error);
     }
   }
 
   setVolume(level: number) {
-    if (this.session) {
-      const volume = new window.cast.Volume(level);
-      const request = new window.cast.VolumeRequest(volume);
-      this.session.setReceiverVolumeLevel(request);
+    try {
+      if (this.session && window.cast) {
+        const volume = new window.cast.Volume(level);
+        const request = new window.cast.VolumeRequest(volume);
+        this.session.setReceiverVolumeLevel(request);
+      }
+    } catch (error) {
+      console.error('Volume error:', error);
     }
   }
 
   seek(time: number) {
-    if (this.session?.media?.[0]) {
-      const request = new window.cast.media.SeekRequest();
-      request.currentTime = time;
-      this.session.media[0].seek(request);
+    try {
+      if (this.session?.media?.[0]) {
+        const request = new window.cast.media.SeekRequest();
+        request.currentTime = time;
+        this.session.media[0].seek(request);
+      }
+    } catch (error) {
+      console.error('Seek error:', error);
     }
   }
 
