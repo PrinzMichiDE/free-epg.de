@@ -243,7 +243,9 @@ export function SecretTvPlayer({ playlistUrl, requiredPin }: SecretTvPlayerProps
     setHistory(getHistory());
     
     // Save as last played
-    localStorage.setItem(LAST_CHANNEL_KEY, channel.id);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LAST_CHANNEL_KEY, channel.id);
+    }
   };
 
   const handleToggleFavorite = (channelId: string, e: React.MouseEvent) => {

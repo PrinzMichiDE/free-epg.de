@@ -302,7 +302,9 @@ export function TvPlayerUltra() {
     setIsPlayerOpen(true);
     addToHistory(channel.id);
     setHistory(getHistory());
-    localStorage.setItem(LAST_CHANNEL_KEY, channel.id);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LAST_CHANNEL_KEY, channel.id);
+    }
     setStreamError(null);
   };
 

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -44,7 +45,15 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="antialiased touch-manipulation">{children}</body>
+      <body className="antialiased touch-manipulation">
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9024379936764895"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+        {children}
+      </body>
     </html>
   );
 }
