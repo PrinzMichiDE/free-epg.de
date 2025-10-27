@@ -6,6 +6,7 @@ import { EpgAutoUpdater } from '@/components/epg-auto-updater';
 import { IptvLinkCard } from '@/components/iptv-link-card';
 import { FeaturesGrid } from '@/components/features-grid';
 import { TvPlayer } from '@/components/tv-player';
+import { TvPlayerEnhanced } from '@/components/tv-player-enhanced';
 import { UsefulFeatures } from '@/components/useful-features';
 import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 import { QuickLinks } from '@/components/quick-links';
@@ -75,8 +76,8 @@ export default function HomePage() {
         {/* Useful Features */}
         <UsefulFeatures />
 
-        {/* TV Player */}
-        <TvPlayer />
+        {/* TV Player Enhanced */}
+        <TvPlayerEnhanced />
 
         {/* Support Banner */}
         <SupportBanner />
