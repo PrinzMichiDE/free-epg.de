@@ -324,13 +324,18 @@ export function PwaTvPlayerEnhanced() {
 
     // If casting, update cast content
     if (castState.isCasting && castManagerRef.current) {
-      castManagerRef.current.stopCast().then(() => {
-        castManagerRef.current?.startCast(
-          channel.url,
-          channel.name,
-          channel.logo
-        );
-      });
+      castManagerRef.current.stopCast()
+        .then(() => {
+          return castManagerRef.current?.startCast(
+            channel.url,
+            channel.name,
+            channel.logo
+          );
+        })
+        .catch((error) => {
+          console.error('Error switching cast channel:', error);
+          showHint('⚠️ Sender-Wechsel fehlgeschlagen');
+        });
     }
   };
 
@@ -420,7 +425,11 @@ export function PwaTvPlayerEnhanced() {
         await castManagerRef.current?.stopCast();
         showHint('❌ Cast beendet');
       } else {
-        await castManagerRef.current?.startCast(
+        if (!castManagerRef.current) {
+          showHint('⚠️ Cast nicht verfügbar');
+          return;
+        }
+        await castManagerRef.current.startCast(
           currentChannel.url,
           currentChannel.name,
           currentChannel.logo
@@ -428,9 +437,20 @@ export function PwaTvPlayerEnhanced() {
         showHint('📺 Casting gestartet');
         triggerHaptic('medium');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Cast error:', error);
-      showHint('⚠️ Cast Fehler');
+      let errorMessage = '⚠️ Cast Fehler';
+      
+      if (error?.message?.includes('not available')) {
+        errorMessage = '📺 Kein Gerät gefunden';
+      } else if (error?.message?.includes('not loaded')) {
+        errorMessage = '⏳ Cast lädt...';
+      } else if (error?.code === 'cancel') {
+        errorMessage = '❌ Abgebrochen';
+        return; // Don't show hint for user cancellation
+      }
+      
+      showHint(errorMessage);
     }
   };
 
