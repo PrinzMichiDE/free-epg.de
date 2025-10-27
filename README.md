@@ -9,13 +9,30 @@ Ein Next.js basierter EPG (Electronic Program Guide) Service, der täglich EPG-D
 - ✅ **Smart Merging**: Intelligentes Mergen mit Deduplizierung
 - ✅ **Auto-Update**: Proaktive Updates beim Seitenaufruf (alle 24h)
 - ✅ **Background Updates**: Automatische Aktualisierung im Hintergrund
-- ✅ **Enhanced TV Player**: Vollständiger Player mit erweiterten Features
+- ✅ **Ultra TV Player**: Professioneller Player mit allen Features
 - ✅ **Favoriten-System**: Speichere deine Lieblings-Sender
 - ✅ **Watch History**: Zuletzt gesehene Sender (letzte 10)
+- ✅ **Last Channel Memory**: Merkt sich den zuletzt gesehenen Sender
 - ✅ **Kategorie-Filter**: Filtere Sender nach Kategorien
-- ✅ **Keyboard Shortcuts**: Space, M, F, P für schnelle Steuerung
+- ✅ **Extended Keyboard Shortcuts**: 
+  - Space = Play/Pause
+  - M = Mute
+  - F = Fullscreen
+  - P = Picture-in-Picture
+  - ←/→ = Sender wechseln
+  - ↑/↓ = Lautstärke
+  - I = Stream Info
+  - C = Quick Access
+- ✅ **Volume Slider**: Visuelle Lautstärke-Regelung
+- ✅ **Channel Navigation**: Vor/Zurück-Buttons
+- ✅ **Loading States**: Animierte Lade-Anzeigen
+- ✅ **Error Handling**: Intelligente Fehlererkennung mit Retry
+- ✅ **Stream Info**: Bitrate, Auflösung, Codec-Anzeige
+- ✅ **View Modes**: Normal, Theater, Mini
+- ✅ **Channel Numbers**: Nummerierte Sender-Thumbnails
+- ✅ **Auto Recovery**: Automatische HLS-Fehlerbehandlung
 - ✅ **Picture-in-Picture**: PiP-Modus für Multitasking
-- ✅ **HLS Streaming**: Unterstützung für HLS/M3U8 Streams
+- ✅ **HLS Streaming**: Optimierte HLS/M3U8 Unterstützung
 - ✅ **Progressive Web App**: Installierbar auf allen Geräten
 - ✅ **Mobile Optimiert**: Touch-optimierte Bedienung für Smartphones
 - ✅ **Offline-Fähig**: Service Worker für Offline-Funktionalität
