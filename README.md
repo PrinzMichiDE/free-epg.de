@@ -129,6 +129,13 @@ Die App kann als Progressive Web App auf allen Geräten installiert werden:
 
 Nach der Installation:
 - ✅ **Reines Live TV Erlebnis** - Nur der Enhanced TV Player ohne EPG-Service-Informationen
+- ✅ **Chromecast & AirPlay Support**:
+  - 📺 **Chromecast** - Streamen zu Google Cast Geräten
+  - 🍎 **AirPlay** - Streamen zu Apple TV und AirPlay-Geräten
+  - 📱 **Fernbedienungs-Modus** - Handy wird zur TV-Fernbedienung
+  - ⏮️⏯️⏭️ **Volle Kontrolle** - Sender wechseln, Play/Pause, Lautstärke
+  - 🔄 **Nahtloser Wechsel** - Sender wechseln während des Castings
+  - 📡 **Status-Anzeige** - Zeigt verbundenes Gerät an
 - ✅ **Touch-Optimiert für Mobilgeräte**:
   - 👆 **Doppel-Tap** = Play/Pause
   - 👈👉 **Horizontal Wischen** = Sender wechseln (vor/zurück)
