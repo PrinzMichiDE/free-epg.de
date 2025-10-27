@@ -115,7 +115,7 @@ export function PwaTvPlayer() {
       <div className="bg-slate-800 border-b border-slate-700 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <TvIcon className="w-6 h-6 text-emerald-400" />
-          <h1 className="text-white font-bold text-lg">EPG TV</h1>
+          <h1 className="text-white font-bold text-lg">Live TV</h1>
           {currentChannel && (
             <span className="text-slate-400 text-sm truncate max-w-[150px] sm:max-w-none">
               {currentChannel.name}
@@ -271,12 +271,27 @@ export function PwaTvPlayer() {
               className="bg-slate-800 rounded-2xl p-6 max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-white font-bold text-xl mb-4">EPG Service</h3>
+              <div className="flex items-center space-x-3 mb-4">
+                <TvIcon className="w-8 h-8 text-emerald-400" />
+                <h3 className="text-white font-bold text-xl">Live TV Player</h3>
+              </div>
               <div className="space-y-3 text-slate-300 text-sm mb-6">
-                <p>{channels.length} deutsche Sender verfügbar</p>
-                <p>Kostenloser Live TV & EPG Service</p>
-                <p className="text-xs text-slate-400">
-                  EPG-Daten werden täglich automatisch aktualisiert
+                <p className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                  <span><strong>{channels.length}</strong> deutsche Sender verfügbar</span>
+                </p>
+                <p className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  <span>HLS/M3U8 Streaming</span>
+                </p>
+                <p className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                  <span>Kostenlos & werbefrei</span>
+                </p>
+              </div>
+              <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-4 mb-6">
+                <p className="text-slate-400 text-xs">
+                  <strong className="text-white">Tipp:</strong> Für EPG-Daten und weitere Features besuche die Website.
                 </p>
               </div>
               <div className="flex gap-3">
@@ -285,7 +300,7 @@ export function PwaTvPlayer() {
                   className="flex-1 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
                 >
                   <HomeIcon className="w-5 h-5" />
-                  <span>Zur Website</span>
+                  <span>Mehr Features</span>
                 </button>
                 <button
                   onClick={() => setShowInfo(false)}

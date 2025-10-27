@@ -11,6 +11,7 @@ import { UsefulFeatures } from '@/components/useful-features';
 import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 import { QuickLinks } from '@/components/quick-links';
 import { PwaTvPlayer } from '@/components/pwa-tv-player';
+import { PwaTvPlayerEnhanced } from '@/components/pwa-tv-player-enhanced';
 import { usePWAMode } from '@/components/pwa-detector';
 import { EpgPreviewCard } from '@/components/epg-preview';
 import { FaqSection } from '@/components/faq-section';
@@ -20,9 +21,9 @@ import { SignalIcon, SparklesIcon } from '@heroicons/react/24/outline';
 export default function HomePage() {
   const isPWA = usePWAMode();
 
-  // Wenn PWA-Modus: Nur TV Player
+  // Wenn PWA-Modus: Nur Enhanced TV Player (ohne EPG Service)
   if (isPWA) {
-    return <PwaTvPlayer />;
+    return <PwaTvPlayerEnhanced />;
   }
 
   // Normale Website: Volle Homepage
