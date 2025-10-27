@@ -28,6 +28,11 @@ Ein Next.js basierter EPG (Electronic Program Guide) Service, der täglich EPG-D
 - ✅ **Setup-Anleitungen**: Schritt-für-Schritt für beliebte IPTV-Apps
 - ✅ **High Performance**: In-Memory Caching & CDN Optimierung
 - ✅ **Modern UI**: Headless UI mit Framer Motion Animationen
+- ✅ **Performance Metrics**: Echtzeit-Monitoring von Response Time, Cache Status & Uptime
+- ✅ **FAQ-Sektion**: Umfassende Antworten auf häufige Fragen
+- ✅ **EPG Preview**: Live-Übersicht über aktuelle EPG-Daten und Update-Zeiten
+- ✅ **Share Tracking**: Zähler für geteilte Links mit verschiedenen Plattformen
+- ✅ **Visitor & Download Stats**: Live-Statistiken mit animierten Zählern
 - ✅ **Statistics**: Besucher- und Download-Counter
 - ✅ **Live Notifications**: Visuelle Update-Benachrichtigungen
 - ✅ **TypeScript**: Vollständige Typsicherheit
@@ -209,6 +214,50 @@ curl http://localhost:3000/api/stats
     "downloads": 123,
     "lastReset": 1697280000000
   }
+}
+```
+
+### GET /api/share
+
+Gibt die Anzahl der geteilten Links zurück.
+
+**Response:**
+- Content-Type: `application/json`
+- Status: 200
+
+**Beispiel:**
+
+```bash
+curl http://localhost:3000/api/share
+```
+
+**Response Beispiel:**
+
+```json
+{
+  "shareCount": 42
+}
+```
+
+### POST /api/share
+
+Erhöht den Share-Counter um 1.
+
+**Response:**
+- Content-Type: `application/json`
+- Status: 200
+
+**Beispiel:**
+
+```bash
+curl -X POST http://localhost:3000/api/share
+```
+
+**Response Beispiel:**
+
+```json
+{
+  "shareCount": 43
 }
 ```
 

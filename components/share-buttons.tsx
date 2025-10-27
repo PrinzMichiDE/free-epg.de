@@ -12,12 +12,29 @@ import {
 export function ShareButtons() {
   const [epgUrl, setEpgUrl] = useState('');
   const [copied, setCopied] = useState(false);
+  const [shareCount, setShareCount] = useState(0);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setEpgUrl(`${window.location.origin}/api/epg`);
     }
+    
+    // Lade Share Count
+    fetch('/api/share')
+      .then(res => res.json())
+      .then(data => setShareCount(data.shareCount))
+      .catch(console.error);
   }, []);
+
+  const trackShare = async () => {
+    try {
+      const res = await fetch('/api/share', { method: 'POST' });
+      const data = await res.json();
+      setShareCount(data.shareCount);
+    } catch (error) {
+      console.error('Fehler beim Tracking:', error);
+    }
+  };
 
   const copyLink = async () => {
     try {
@@ -30,6 +47,7 @@ export function ShareButtons() {
   };
 
   const shareViaEmail = () => {
+    trackShare();
     const subject = encodeURIComponent('EPG Service - Electronic Program Guide');
     const body = encodeURIComponent(
       `Hallo!\n\nIch nutze diesen kostenlosen EPG Service:\n\nEPG URL: ${epgUrl}\n\nWebsite: ${window.location.origin}\n\nViele Grüße`
@@ -38,6 +56,7 @@ export function ShareButtons() {
   };
 
   const shareViaWhatsApp = () => {
+    trackShare();
     const text = encodeURIComponent(
       `EPG Service - Kostenloser Electronic Program Guide\n\nEPG URL: ${epgUrl}\n\n${window.location.origin}`
     );
@@ -45,6 +64,7 @@ export function ShareButtons() {
   };
 
   const shareViaTelegram = () => {
+    trackShare();
     const text = encodeURIComponent(
       `EPG Service - Kostenloser EPG für IPTV\n\nEPG URL: ${epgUrl}\n\n${window.location.origin}`
     );
@@ -59,6 +79,7 @@ export function ShareButtons() {
           text: 'Kostenloser EPG Service für IPTV',
           url: window.location.origin,
         });
+        trackShare();
       } catch (err) {
         console.log('Share abgebrochen:', err);
       }
@@ -67,9 +88,17 @@ export function ShareButtons() {
 
   return (
     <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
-      <div className="flex items-center space-x-3 mb-4">
-        <ShareIcon className="w-6 h-6 text-pink-400" />
-        <h3 className="text-xl font-semibold text-white">Teilen</h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <ShareIcon className="w-6 h-6 text-pink-400" />
+          <h3 className="text-xl font-semibold text-white">Teilen</h3>
+        </div>
+        {shareCount > 0 && (
+          <div className="text-right">
+            <p className="text-2xl font-bold text-emerald-400">{shareCount}</p>
+            <p className="text-slate-400 text-xs">Mal geteilt</p>
+          </div>
+        )}
       </div>
 
       <p className="text-slate-400 text-sm mb-6">
