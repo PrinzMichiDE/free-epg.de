@@ -9,7 +9,12 @@ Ein Next.js basierter EPG (Electronic Program Guide) Service, der täglich EPG-D
 - ✅ **Smart Merging**: Intelligentes Mergen mit Deduplizierung
 - ✅ **Auto-Update**: Proaktive Updates beim Seitenaufruf (alle 24h)
 - ✅ **Background Updates**: Automatische Aktualisierung im Hintergrund
-- ✅ **Live TV Player**: Integrierter Player mit deutscher IPTV-Playlist
+- ✅ **Enhanced TV Player**: Vollständiger Player mit erweiterten Features
+- ✅ **Favoriten-System**: Speichere deine Lieblings-Sender
+- ✅ **Watch History**: Zuletzt gesehene Sender (letzte 10)
+- ✅ **Kategorie-Filter**: Filtere Sender nach Kategorien
+- ✅ **Keyboard Shortcuts**: Space, M, F, P für schnelle Steuerung
+- ✅ **Picture-in-Picture**: PiP-Modus für Multitasking
 - ✅ **HLS Streaming**: Unterstützung für HLS/M3U8 Streams
 - ✅ **Progressive Web App**: Installierbar auf allen Geräten
 - ✅ **Mobile Optimiert**: Touch-optimierte Bedienung für Smartphones
