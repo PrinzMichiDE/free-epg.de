@@ -62,7 +62,7 @@ export function TvPlayerUltra() {
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const volumeTimeoutRef = useRef<NodeJS.Timeout>();
+  const volumeTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Lade Playlist
   useEffect(() => {
