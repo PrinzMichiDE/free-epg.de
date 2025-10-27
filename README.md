@@ -129,10 +129,20 @@ Die App kann als Progressive Web App auf allen Geräten installiert werden:
 
 Nach der Installation:
 - ✅ **Reines Live TV Erlebnis** - Nur der Enhanced TV Player ohne EPG-Service-Informationen
+- ✅ **Touch-Optimiert für Mobilgeräte**:
+  - 👆 **Doppel-Tap** = Play/Pause
+  - 👈👉 **Horizontal Wischen** = Sender wechseln (vor/zurück)
+  - 👆👇 **Vertikal Wischen** = Lautstärke anpassen
+  - 📳 **Haptisches Feedback** bei allen Interaktionen
+  - 💬 **Visuelle Gesten-Hinweise** als Feedback
 - ✅ **Favoriten & History** - Deine Lieblingssender immer griffbereit
+- ✅ **Last Channel Memory** - Setzt genau da fort wo du warst
 - ✅ **Keyboard Shortcuts** - Space, M, F, P für schnelle Steuerung
+- ✅ **Arrow Key Controls** - ←/→ Sender, ↑/↓ Lautstärke
 - ✅ **Picture-in-Picture** - Multitasking beim TV schauen
 - ✅ **Kategorie-Filter** - Schnelles Finden von Sendern nach Genre
+- ✅ **Quick Navigation** - Große Touch-Buttons für Sender-Wechsel
+- ✅ **Volume Slider** - Visueller Lautstärke-Regler
 - ✅ **Vollbild-Modus** - Optimales Seherlebnis
 - ✅ **Schneller Zugriff** vom Home-Screen
 - ✅ **Offline-Zugriff** auf gecachte Inhalte
