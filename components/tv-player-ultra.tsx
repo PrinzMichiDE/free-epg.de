@@ -59,13 +59,21 @@ export function TvPlayerUltra() {
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [showQuickAccess, setShowQuickAccess] = useState(false);
   const [showStreamInfo, setShowStreamInfo] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const volumeTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
+  // Mount check
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Lade Playlist
   useEffect(() => {
+    if (!isMounted) return;
+    
     const loadChannels = async () => {
       try {
         const channelList = await loadM3UPlaylist(PLAYLIST_URL);
@@ -82,12 +90,14 @@ export function TvPlayerUltra() {
         setCategories(cats);
 
         // Restore last channel
-        const lastChannelId = localStorage.getItem(LAST_CHANNEL_KEY);
-        if (lastChannelId) {
-          const lastChannel = channelList.find(ch => ch.id === lastChannelId);
-          if (lastChannel) {
-            setCurrentChannel(lastChannel);
-            setIsPlayerOpen(true);
+        if (typeof window !== 'undefined') {
+          const lastChannelId = localStorage.getItem(LAST_CHANNEL_KEY);
+          if (lastChannelId) {
+            const lastChannel = channelList.find(ch => ch.id === lastChannelId);
+            if (lastChannel) {
+              setCurrentChannel(lastChannel);
+              setIsPlayerOpen(true);
+            }
           }
         }
       } catch (error) {
@@ -98,7 +108,7 @@ export function TvPlayerUltra() {
     };
 
     loadChannels();
-  }, []);
+  }, [isMounted]);
 
   // Load favorites and history
   useEffect(() => {

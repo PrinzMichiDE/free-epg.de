@@ -54,13 +54,21 @@ export function PwaTvPlayerEnhanced() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [streamInfo, setStreamInfo] = useState<StreamInfo>({});
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const volumeTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
+  // Mount check
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Lade Playlist
   useEffect(() => {
+    if (!isMounted) return;
+    
     const loadChannels = async () => {
       try {
         const channelList = await loadM3UPlaylist(PLAYLIST_URL);
@@ -77,11 +85,13 @@ export function PwaTvPlayerEnhanced() {
         setCategories(cats);
 
         // Restore last channel
-        const lastChannelId = localStorage.getItem(LAST_CHANNEL_KEY);
-        if (lastChannelId) {
-          const lastChannel = channelList.find(ch => ch.id === lastChannelId);
-          if (lastChannel) {
-            setCurrentChannel(lastChannel);
+        if (typeof window !== 'undefined') {
+          const lastChannelId = localStorage.getItem(LAST_CHANNEL_KEY);
+          if (lastChannelId) {
+            const lastChannel = channelList.find(ch => ch.id === lastChannelId);
+            if (lastChannel) {
+              setCurrentChannel(lastChannel);
+            }
           }
         }
       } catch (error) {
@@ -92,7 +102,7 @@ export function PwaTvPlayerEnhanced() {
     };
 
     loadChannels();
-  }, []);
+  }, [isMounted]);
 
   // Load favorites and history
   useEffect(() => {
