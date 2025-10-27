@@ -13,11 +13,15 @@ export function PinLock({ onUnlock, requiredPin }: PinLockProps) {
   const [pin, setPin] = useState(['', '', '', '']);
   const [error, setError] = useState(false);
   const [shaking, setShaking] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
+    setIsMounted(true);
     // Fokussiere das erste Eingabefeld beim Laden
-    inputRefs.current[0]?.focus();
+    setTimeout(() => {
+      inputRefs.current[0]?.focus();
+    }, 100);
   }, []);
 
   const handleChange = (index: number, value: string) => {
