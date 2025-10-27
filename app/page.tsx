@@ -12,6 +12,9 @@ import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 import { QuickLinks } from '@/components/quick-links';
 import { PwaTvPlayer } from '@/components/pwa-tv-player';
 import { usePWAMode } from '@/components/pwa-detector';
+import { EpgPreviewCard } from '@/components/epg-preview';
+import { FaqSection } from '@/components/faq-section';
+import { PerformanceMetrics } from '@/components/performance-metrics';
 import { SignalIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 export default function HomePage() {
@@ -70,6 +73,12 @@ export default function HomePage() {
           <StatsCard />
         </div>
 
+        {/* EPG Preview */}
+        <EpgPreviewCard />
+
+        {/* Performance Metrics */}
+        <PerformanceMetrics />
+
         {/* Features */}
         <FeaturesGrid />
 
@@ -78,6 +87,9 @@ export default function HomePage() {
 
         {/* TV Player Enhanced */}
         <TvPlayerEnhanced />
+
+        {/* FAQ Section */}
+        <FaqSection />
 
         {/* Support Banner */}
         <SupportBanner />
