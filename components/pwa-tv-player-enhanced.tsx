@@ -62,7 +62,7 @@ export function PwaTvPlayerEnhanced() {
   const volumeTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const lastTapRef = useRef<number>(0);
-  const gestureTimeoutRef = useRef<NodeJS.Timeout>();
+  const gestureTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Mount check
   useEffect(() => {
