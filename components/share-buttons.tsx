@@ -140,7 +140,7 @@ export function ShareButtons() {
         </motion.button>
 
         {/* Native Share (Mobile) */}
-        {typeof window !== 'undefined' && navigator.share && (
+        {typeof window !== 'undefined' && 'share' in navigator && (
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
