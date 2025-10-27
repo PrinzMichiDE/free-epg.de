@@ -7,6 +7,7 @@ import { IptvLinkCard } from '@/components/iptv-link-card';
 import { FeaturesGrid } from '@/components/features-grid';
 import { TvPlayer } from '@/components/tv-player';
 import { TvPlayerEnhanced } from '@/components/tv-player-enhanced';
+import { TvPlayerUltra } from '@/components/tv-player-ultra';
 import { UsefulFeatures } from '@/components/useful-features';
 import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 import { QuickLinks } from '@/components/quick-links';
@@ -86,8 +87,8 @@ export default function HomePage() {
         {/* Useful Features */}
         <UsefulFeatures />
 
-        {/* TV Player Enhanced */}
-        <TvPlayerEnhanced />
+        {/* TV Player Ultra */}
+        <TvPlayerUltra />
 
         {/* FAQ Section */}
         <FaqSection />
