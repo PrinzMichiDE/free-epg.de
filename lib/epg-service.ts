@@ -813,68 +813,51 @@ function mergeEpgData(xmlDataArray: string[]): string {
 
 /**
  * Lädt alle EPG Quellen für ein bestimmtes Land und merged sie
- * Verwendet Fallback-Quellen, wenn primäre Quellen fehlschlagen
+ * Kombiniert ALLE verfügbaren Quellen (primär + Fallback) zu einer vereinten Ausgabe
  */
 export async function loadEpgData(countryCode: string = DEFAULT_COUNTRY): Promise<string> {
   const config = getCountryConfig(countryCode);
   const startTime = Date.now();
   console.log(`[EPG] Lade EPG Daten für ${config.name} (${config.code})...`);
-  console.log(`[EPG] ${config.sources.length} primäre Quellen verfügbar`);
+  console.log(`[EPG] ${config.sources.length} primäre Quellen, ${config.fallbackSources.length} Fallback-Quellen verfügbar`);
 
-  // Versuche primäre Quellen zu laden
-  const loadPromises = config.sources.map((source) =>
+  // Kombiniere alle Quellen (primär + Fallback) für maximale Abdeckung
+  const allSources = [...config.sources, ...config.fallbackSources];
+  
+  // Entferne Duplikate basierend auf URL (um gleiche Quellen nicht mehrfach zu laden)
+  const uniqueSources = Array.from(
+    new Map(allSources.map(source => [source.url, source])).values()
+  );
+
+  console.log(`[EPG] Lade ${uniqueSources.length} einzigartige Quellen (alle werden kombiniert)...`);
+
+  // Lade alle Quellen parallel
+  const loadPromises = uniqueSources.map((source) =>
     loadSingleSource(source.url, source.compressed)
   );
 
-  const primaryResults = await Promise.all(loadPromises);
+  const allResults = await Promise.all(loadPromises);
   
   // Filtere erfolgreiche Ergebnisse heraus
-  const successfulData = primaryResults.filter((data): data is string => data !== null);
+  const successfulData = allResults.filter((data): data is string => data !== null);
   
-  // Wenn mindestens eine primäre Quelle erfolgreich war, merge die Daten
-  if (successfulData.length > 0) {
-    console.log(`[EPG] ${successfulData.length}/${config.sources.length} primäre Quellen erfolgreich geladen`);
-    
-    try {
-      const mergedXml = mergeEpgData(successfulData);
-      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-      console.log(
-        `[EPG] Erfolgreich geladen in ${duration}s (${Math.round(mergedXml.length / 1024)} KB)`
-      );
-      return mergedXml;
-    } catch (error) {
-      console.error('[EPG] Fehler beim Mergen der primären Daten:', error);
-      // Fallback wird verwendet
-    }
+  if (successfulData.length === 0) {
+    throw new Error(`Alle EPG Quellen für ${config.name} sind fehlgeschlagen`);
   }
 
-  // Alle primären Quellen fehlgeschlagen - verwende Fallback
-  if (config.fallbackSources.length === 0) {
-    throw new Error(`Keine EPG Daten für ${config.name} verfügbar`);
-  }
-
-  console.log('[EPG] Alle primären Quellen fehlgeschlagen, verwende Fallback-Quellen...');
+  console.log(`[EPG] ${successfulData.length}/${uniqueSources.length} Quellen erfolgreich geladen - kombiniere zu vereinter Ausgabe...`);
   
-  const fallbackPromises = config.fallbackSources.map((source) =>
-    loadSingleSource(source.url, source.compressed)
-  );
-
-  const fallbackResults = await Promise.all(fallbackPromises);
-  const fallbackData = fallbackResults.filter((data): data is string => data !== null);
-
-  if (fallbackData.length === 0) {
-    throw new Error(`Alle EPG Quellen (primär und Fallback) für ${config.name} sind fehlgeschlagen`);
+  try {
+    const mergedXml = mergeEpgData(successfulData);
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(
+      `[EPG] Alle Quellen erfolgreich kombiniert in ${duration}s (${Math.round(mergedXml.length / 1024)} KB)`
+    );
+    return mergedXml;
+  } catch (error) {
+    console.error('[EPG] Fehler beim Mergen der Daten:', error);
+    throw new Error(`Fehler beim Kombinieren der EPG Quellen für ${config.name}: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
   }
-
-  console.log(`[EPG] ${fallbackData.length}/${config.fallbackSources.length} Fallback-Quellen erfolgreich geladen`);
-  
-  const mergedXml = mergeEpgData(fallbackData);
-  const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-  console.log(
-    `[EPG] Fallback erfolgreich geladen in ${duration}s (${Math.round(mergedXml.length / 1024)} KB)`
-  );
-
-  return mergedXml;
 }
 
 /**

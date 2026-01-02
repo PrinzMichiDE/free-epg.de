@@ -22,6 +22,12 @@ export async function GET(request: Request) {
       10
     );
 
+    // Kombiniere alle Quellen für die Anzeige
+    const allSources = [...config.sources, ...config.fallbackSources];
+    const uniqueSources = Array.from(
+      new Map(allSources.map(source => [source.url, source])).values()
+    );
+
     return NextResponse.json(
       {
         country: {
@@ -34,24 +40,22 @@ export async function GET(request: Request) {
           ageFormatted: cacheInfo.ageFormatted,
           revalidateSeconds,
         },
-        sources: config.sources.map((source, idx) => ({
+        sources: uniqueSources.map((source, idx) => ({
           name: `${config.name} EPG Source ${idx + 1}`,
           url: source.url,
           type: source.compressed ? 'xml.gz' : 'xml',
-          priority: 'primary',
+          priority: config.sources.some(s => s.url === source.url) ? 'primary' : 'fallback',
           provider: source.url.includes('epghub.xyz') ? 'EPGHub' : 
                    source.url.includes('globetvapp') ? 'GlobeTV' :
                    source.url.includes('epgshare01') ? 'EPGShare' : 'Unknown',
         })),
-        fallbackSources: config.fallbackSources.map((source, idx) => ({
-          name: `${config.name} EPG Fallback ${idx + 1}`,
-          url: source.url,
-          type: source.compressed ? 'xml.gz' : 'xml',
-          priority: 'fallback',
-          provider: source.url.includes('epghub.xyz') ? 'EPGHub' : 
-                   source.url.includes('globetvapp') ? 'GlobeTV' :
-                   source.url.includes('epgshare01') ? 'EPGShare' : 'Unknown',
-        })),
+        info: {
+          totalSources: uniqueSources.length,
+          primarySources: config.sources.length,
+          fallbackSources: config.fallbackSources.length,
+          combined: true,
+          description: 'Alle Quellen werden zu einer vereinten XML-Ausgabe kombiniert',
+        },
         availableCountries: getAvailableCountries(),
         endpoints: {
           epg: `/api/epg?country=${countryCode}`,
