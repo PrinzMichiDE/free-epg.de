@@ -153,7 +153,7 @@ export default function HomePage() {
             transition={{ delay: 0.3, duration: 0.5 }}
             className="text-base md:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed"
           >
-            {t('description')}
+            {t('description').replace('13', '40')}
           </motion.p>
         </div>
 

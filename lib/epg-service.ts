@@ -56,6 +56,10 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
+        url: 'https://epghub.xyz/epg/de.xml',
+        compressed: false,
+      },
+      {
         url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
         compressed: true,
       },
@@ -64,6 +68,10 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
       {
         url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
         compressed: true,
+      },
+      {
+        url: 'https://epghub.xyz/epg/de.xml',
+        compressed: false,
       },
       {
         url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml',
@@ -79,8 +87,17 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/USA/usa1.xml',
         compressed: false,
       },
+      {
+        url: 'https://epghub.xyz/epg/us.xml',
+        compressed: false,
+      },
     ],
-    fallbackSources: [],
+    fallbackSources: [
+      {
+        url: 'https://epghub.xyz/epg/us.xml',
+        compressed: false,
+      },
+    ],
   },
   GB: {
     code: 'GB',
@@ -90,8 +107,17 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/UK/uk1.xml',
         compressed: false,
       },
+      {
+        url: 'https://epghub.xyz/epg/gb.xml',
+        compressed: false,
+      },
     ],
-    fallbackSources: [],
+    fallbackSources: [
+      {
+        url: 'https://epghub.xyz/epg/gb.xml',
+        compressed: false,
+      },
+    ],
   },
   FR: {
     code: 'FR',
@@ -101,8 +127,17 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/France/france1.xml',
         compressed: false,
       },
+      {
+        url: 'https://epghub.xyz/epg/fr.xml',
+        compressed: false,
+      },
     ],
-    fallbackSources: [],
+    fallbackSources: [
+      {
+        url: 'https://epghub.xyz/epg/fr.xml',
+        compressed: false,
+      },
+    ],
   },
   IT: {
     code: 'IT',
@@ -112,8 +147,17 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Italy/italy1.xml',
         compressed: false,
       },
+      {
+        url: 'https://epghub.xyz/epg/it.xml',
+        compressed: false,
+      },
     ],
-    fallbackSources: [],
+    fallbackSources: [
+      {
+        url: 'https://epghub.xyz/epg/it.xml',
+        compressed: false,
+      },
+    ],
   },
   ES: {
     code: 'ES',
@@ -123,8 +167,17 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Spain/spain1.xml',
         compressed: false,
       },
+      {
+        url: 'https://epghub.xyz/epg/es.xml',
+        compressed: false,
+      },
     ],
-    fallbackSources: [],
+    fallbackSources: [
+      {
+        url: 'https://epghub.xyz/epg/es.xml',
+        compressed: false,
+      },
+    ],
   },
   NL: {
     code: 'NL',
@@ -134,8 +187,17 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Netherlands/netherlands1.xml',
         compressed: false,
       },
+      {
+        url: 'https://epghub.xyz/epg/nl.xml',
+        compressed: false,
+      },
     ],
-    fallbackSources: [],
+    fallbackSources: [
+      {
+        url: 'https://epghub.xyz/epg/nl.xml',
+        compressed: false,
+      },
+    ],
   },
   PL: {
     code: 'PL',
@@ -145,8 +207,17 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Poland/poland1.xml',
         compressed: false,
       },
+      {
+        url: 'https://epghub.xyz/epg/pl.xml',
+        compressed: false,
+      },
     ],
-    fallbackSources: [],
+    fallbackSources: [
+      {
+        url: 'https://epghub.xyz/epg/pl.xml',
+        compressed: false,
+      },
+    ],
   },
   AT: {
     code: 'AT',
@@ -156,8 +227,17 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Austria/austria1.xml',
         compressed: false,
       },
+      {
+        url: 'https://epghub.xyz/epg/at.xml',
+        compressed: false,
+      },
     ],
-    fallbackSources: [],
+    fallbackSources: [
+      {
+        url: 'https://epghub.xyz/epg/at.xml',
+        compressed: false,
+      },
+    ],
   },
   CH: {
     code: 'CH',
@@ -167,8 +247,17 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Switzerland/switzerland1.xml',
         compressed: false,
       },
+      {
+        url: 'https://epghub.xyz/epg/ch.xml',
+        compressed: false,
+      },
     ],
-    fallbackSources: [],
+    fallbackSources: [
+      {
+        url: 'https://epghub.xyz/epg/ch.xml',
+        compressed: false,
+      },
+    ],
   },
   BE: {
     code: 'BE',
@@ -178,8 +267,17 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Belgium/belgium1.xml',
         compressed: false,
       },
+      {
+        url: 'https://epghub.xyz/epg/be.xml',
+        compressed: false,
+      },
     ],
-    fallbackSources: [],
+    fallbackSources: [
+      {
+        url: 'https://epghub.xyz/epg/be.xml',
+        compressed: false,
+      },
+    ],
   },
   CA: {
     code: 'CA',
@@ -189,8 +287,17 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Canada/canada1.xml',
         compressed: false,
       },
+      {
+        url: 'https://epghub.xyz/epg/ca.xml',
+        compressed: false,
+      },
     ],
-    fallbackSources: [],
+    fallbackSources: [
+      {
+        url: 'https://epghub.xyz/epg/ca.xml',
+        compressed: false,
+      },
+    ],
   },
   AU: {
     code: 'AU',
@@ -198,6 +305,291 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     sources: [
       {
         url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Australia/australia1.xml',
+        compressed: false,
+      },
+      {
+        url: 'https://epghub.xyz/epg/au.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [
+      {
+        url: 'https://epghub.xyz/epg/au.xml',
+        compressed: false,
+      },
+    ],
+  },
+  // Weitere Länder mit epghub.xyz
+  PT: {
+    code: 'PT',
+    name: 'Portugal',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/pt.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  GR: {
+    code: 'GR',
+    name: 'Greece',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/gr.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  TR: {
+    code: 'TR',
+    name: 'Turkey',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/tr.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  RO: {
+    code: 'RO',
+    name: 'Romania',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/ro.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  CZ: {
+    code: 'CZ',
+    name: 'Czech Republic',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/cz.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  SE: {
+    code: 'SE',
+    name: 'Sweden',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/se.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  NO: {
+    code: 'NO',
+    name: 'Norway',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/no.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  DK: {
+    code: 'DK',
+    name: 'Denmark',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/dk.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  FI: {
+    code: 'FI',
+    name: 'Finland',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/fi.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  IE: {
+    code: 'IE',
+    name: 'Ireland',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/ie.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  BR: {
+    code: 'BR',
+    name: 'Brazil',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/br.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  MX: {
+    code: 'MX',
+    name: 'Mexico',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/mx.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  AR: {
+    code: 'AR',
+    name: 'Argentina',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/ar.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  CL: {
+    code: 'CL',
+    name: 'Chile',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/cl.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  CO: {
+    code: 'CO',
+    name: 'Colombia',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/co.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  IN: {
+    code: 'IN',
+    name: 'India',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/in.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  JP: {
+    code: 'JP',
+    name: 'Japan',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/jp.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  KR: {
+    code: 'KR',
+    name: 'South Korea',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/kr.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  CN: {
+    code: 'CN',
+    name: 'China',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/cn.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  RU: {
+    code: 'RU',
+    name: 'Russia',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/ru.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  UA: {
+    code: 'UA',
+    name: 'Ukraine',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/ua.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  SA: {
+    code: 'SA',
+    name: 'Saudi Arabia',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/sa.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  AE: {
+    code: 'AE',
+    name: 'United Arab Emirates',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/ae.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  ZA: {
+    code: 'ZA',
+    name: 'South Africa',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/za.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  NZ: {
+    code: 'NZ',
+    name: 'New Zealand',
+    sources: [
+      {
+        url: 'https://epghub.xyz/epg/nz.xml',
         compressed: false,
       },
     ],

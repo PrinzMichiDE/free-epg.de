@@ -34,17 +34,23 @@ export async function GET(request: Request) {
           ageFormatted: cacheInfo.ageFormatted,
           revalidateSeconds,
         },
-        sources: config.sources.map((source) => ({
-          name: `${config.name} EPG Source`,
+        sources: config.sources.map((source, idx) => ({
+          name: `${config.name} EPG Source ${idx + 1}`,
           url: source.url,
           type: source.compressed ? 'xml.gz' : 'xml',
           priority: 'primary',
+          provider: source.url.includes('epghub.xyz') ? 'EPGHub' : 
+                   source.url.includes('globetvapp') ? 'GlobeTV' :
+                   source.url.includes('epgshare01') ? 'EPGShare' : 'Unknown',
         })),
-        fallbackSources: config.fallbackSources.map((source) => ({
-          name: `${config.name} EPG Fallback`,
+        fallbackSources: config.fallbackSources.map((source, idx) => ({
+          name: `${config.name} EPG Fallback ${idx + 1}`,
           url: source.url,
           type: source.compressed ? 'xml.gz' : 'xml',
           priority: 'fallback',
+          provider: source.url.includes('epghub.xyz') ? 'EPGHub' : 
+                   source.url.includes('globetvapp') ? 'GlobeTV' :
+                   source.url.includes('epgshare01') ? 'EPGShare' : 'Unknown',
         })),
         availableCountries: getAvailableCountries(),
         endpoints: {
