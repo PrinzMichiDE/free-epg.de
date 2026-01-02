@@ -5,6 +5,11 @@ import { locales, defaultLanguage } from './lib/i18n';
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   
+  // Exclude /mcp from locale redirect
+  if (pathname === '/mcp' || pathname.startsWith('/mcp/')) {
+    return NextResponse.next();
+  }
+  
   // Prüfe ob bereits ein Locale im Pfad ist
   const pathnameHasLocale = locales.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`

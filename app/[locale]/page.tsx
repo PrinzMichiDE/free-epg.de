@@ -210,6 +210,43 @@ export default function HomePage() {
           </motion.div>
         </div>
 
+        {/* MCP Interface Link */}
+        <div className="mb-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl hover:border-purple-500/30 transition-all duration-300"
+          >
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-4">
+                <div className="p-4 bg-gradient-to-br from-purple-500/20 to-pink-600/20 border border-purple-500/30 rounded-xl shadow-lg">
+                  <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                {t('mcpTitle')}
+              </h2>
+              <p className="text-slate-400 text-lg mb-6 max-w-2xl mx-auto">
+                {t('mcpDescription')}
+              </p>
+              <motion.a
+                href="/mcp"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-600 text-white font-bold rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all shadow-xl shadow-purple-500/50 text-lg"
+              >
+                <svg className="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                {t('mcpButton')}
+              </motion.a>
+            </div>
+          </motion.div>
+        </div>
+
         {/* Stats - Simple */}
         <div id="stats" className="mb-16">
           <StatsCard />

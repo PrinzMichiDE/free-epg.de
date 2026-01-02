@@ -67,6 +67,11 @@ export const translations = {
     liveTvTitle: 'Live TV Player',
     liveTvDescription: 'Nutze unseren Live TV Player für direktes Streaming deutscher Sender. Keine App erforderlich - einfach im Browser öffnen.',
     liveTvButton: 'Zum Live TV Player',
+    
+    // MCP
+    mcpTitle: 'MCP HTTP Stream Interface',
+    mcpDescription: 'Model Context Protocol Server mit HTTP Streaming Support. Teste die JSON-RPC 2.0 Schnittstelle direkt im Browser.',
+    mcpButton: 'Zur MCP Schnittstelle',
   },
   en: {
     title: 'Free TV Program Guide',
@@ -127,6 +132,11 @@ export const translations = {
     liveTvTitle: 'Live TV Player',
     liveTvDescription: 'Use our Live TV Player for direct streaming of German channels. No app required - simply open in your browser.',
     liveTvButton: 'Go to Live TV Player',
+    
+    // MCP
+    mcpTitle: 'MCP HTTP Stream Interface',
+    mcpDescription: 'Model Context Protocol Server with HTTP Streaming Support. Test the JSON-RPC 2.0 interface directly in your browser.',
+    mcpButton: 'Go to MCP Interface',
   },
   fr: {
     title: 'Guide de programmes TV gratuit',
@@ -187,6 +197,11 @@ export const translations = {
     liveTvTitle: 'Lecteur TV en direct',
     liveTvDescription: 'Utilisez notre lecteur TV en direct pour diffuser directement les chaînes allemandes. Aucune application requise - ouvrez simplement dans votre navigateur.',
     liveTvButton: 'Aller au lecteur TV en direct',
+    
+    // MCP
+    mcpTitle: 'Interface MCP HTTP Stream',
+    mcpDescription: 'Serveur Model Context Protocol avec support de streaming HTTP. Testez l\'interface JSON-RPC 2.0 directement dans votre navigateur.',
+    mcpButton: 'Aller à l\'interface MCP',
   },
   es: {
     title: 'Guía de programas de TV gratuita',
@@ -247,6 +262,11 @@ export const translations = {
     liveTvTitle: 'Reproductor de TV en vivo',
     liveTvDescription: 'Utiliza nuestro reproductor de TV en vivo para transmitir directamente canales alemanes. No se requiere aplicación - simplemente abre en tu navegador.',
     liveTvButton: 'Ir al reproductor de TV en vivo',
+    
+    // MCP
+    mcpTitle: 'Interfaz MCP HTTP Stream',
+    mcpDescription: 'Servidor Model Context Protocol con soporte de streaming HTTP. Prueba la interfaz JSON-RPC 2.0 directamente en tu navegador.',
+    mcpButton: 'Ir a la interfaz MCP',
   },
 } as const;
 
