@@ -5,8 +5,9 @@
  */
 
 // Vercel Edge Config Import (optional, falls nicht konfiguriert)
-let edgeConfig: any = null;
+let edgeConfigGet: ((key: string) => Promise<any>) | null = null;
 let edgeConfigToken: string | null = null;
+let edgeConfigStoreId: string | null = null;
 let edgeConfigInitialized = false;
 
 // Initialisiere Edge Config nur wenn Umgebungsvariablen gesetzt sind
@@ -23,11 +24,43 @@ function initializeEdgeConfig(): void {
   }
   
   try {
+    // Extrahiere Store-ID aus Connection String (Format: https://edge-config.vercel.com/{storeId}?token=...)
+    const urlMatch = connectionString.match(/edge-config\.vercel\.com\/([^?]+)/);
+    if (urlMatch) {
+      edgeConfigStoreId = urlMatch[1];
+    }
+    
+    // Importiere Edge Config get Funktion
+    // Die @vercel/edge-config Bibliothek exportiert get direkt
     const edgeConfigModule = require('@vercel/edge-config');
-    edgeConfig = edgeConfigModule.getEdgeConfig(connectionString);
+    
+    // Prüfe verschiedene mögliche Export-Formate
+    let getFunction = edgeConfigModule.get || edgeConfigModule.default?.get || edgeConfigModule;
+    
+    if (typeof getFunction === 'function') {
+      // Erstelle eine get Funktion die den Connection String verwendet
+      // Edge Config verwendet automatisch EDGE_CONFIG env variable wenn vorhanden
+      edgeConfigGet = async (key: string) => {
+        try {
+          // Versuche mit Connection String Option
+          if (typeof getFunction === 'function' && getFunction.length > 1) {
+            return await getFunction(key, { edgeConfig: connectionString });
+          }
+          // Fallback: direkter Aufruf (nutzt automatisch EDGE_CONFIG env)
+          return await getFunction(key);
+        } catch (err) {
+          console.error(`[Stats] Fehler beim Lesen von Edge Config Key ${key}:`, err);
+          return null;
+        }
+      };
+    } else {
+      throw new Error('Edge Config get function not available');
+    }
   } catch (error) {
     // Nur warnen wenn Connection String vorhanden aber Initialisierung fehlschlägt
     console.warn('[Stats] Vercel Edge Config Initialisierung fehlgeschlagen:', error);
+    edgeConfigGet = null;
+    edgeConfigStoreId = null;
   }
 }
 
@@ -72,10 +105,10 @@ function isEdgeConfigAvailable(): boolean {
   
   try {
     const hasConnectionString = !!process.env.EDGE_CONFIG;
-    const hasConfig = edgeConfig !== null && typeof edgeConfig !== 'undefined';
+    const hasGetFunction = edgeConfigGet !== null && typeof edgeConfigGet === 'function';
     
-    // Für Reads reicht die Connection String, für Writes brauchen wir auch den Token
-    return hasConnectionString && hasConfig;
+    // Für Reads reicht die Connection String und get Funktion
+    return hasConnectionString && hasGetFunction;
   } catch {
     return false;
   }
@@ -104,9 +137,9 @@ function isEdgeConfigWriteAvailable(): boolean {
 async function loadStats(): Promise<Stats> {
   if (statsCache) return statsCache;
   
-  if (isEdgeConfigAvailable() && edgeConfig) {
+  if (isEdgeConfigAvailable() && edgeConfigGet) {
     try {
-      const edgeStatsStr = await edgeConfig.get(EDGE_STATS_KEY) as string | null;
+      const edgeStatsStr = await edgeConfigGet(EDGE_STATS_KEY) as string | null;
       if (edgeStatsStr) {
         const edgeStats = JSON.parse(edgeStatsStr) as Stats;
         statsCache = edgeStats;
@@ -135,14 +168,19 @@ async function saveStats(stats: Stats): Promise<void> {
   
   if (isEdgeConfigWriteAvailable()) {
     try {
-      const edgeConfigUrl = process.env.EDGE_CONFIG;
-      if (!edgeConfigUrl) return;
+      if (!edgeConfigStoreId) {
+        const edgeConfigUrl = process.env.EDGE_CONFIG;
+        if (!edgeConfigUrl) return;
+        
+        // Extrahiere die Store-ID aus der Connection String
+        const urlMatch = edgeConfigUrl.match(/edge-config\.vercel\.com\/([^?]+)/);
+        if (!urlMatch) return;
+        edgeConfigStoreId = urlMatch[1];
+      }
       
-      // Extrahiere die Store-ID aus der Connection String
-      const storeId = edgeConfigUrl.split('://')[1]?.split('.')[0];
-      if (!storeId) return;
+      if (!edgeConfigStoreId) return;
       
-      const response = await fetch(`https://api.vercel.com/v1/edge-config/${storeId}/items`, {
+      const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${edgeConfigToken}`,
@@ -176,9 +214,9 @@ async function loadDailyUsage(): Promise<Map<string, DailyUsage>> {
   
   const usageMap = new Map<string, DailyUsage>();
   
-  if (isEdgeConfigAvailable() && edgeConfig) {
+  if (isEdgeConfigAvailable() && edgeConfigGet) {
     try {
-      const edgeUsageStr = await edgeConfig.get(EDGE_DAILY_USAGE_KEY) as string | null;
+      const edgeUsageStr = await edgeConfigGet(EDGE_DAILY_USAGE_KEY) as string | null;
       if (edgeUsageStr) {
         const edgeUsage = JSON.parse(edgeUsageStr) as Record<string, DailyUsage>;
         Object.entries(edgeUsage).forEach(([date, usage]) => {
@@ -204,18 +242,23 @@ async function saveDailyUsage(usage: Map<string, DailyUsage>): Promise<void> {
   
   if (isEdgeConfigWriteAvailable()) {
     try {
-      const edgeConfigUrl = process.env.EDGE_CONFIG;
-      if (!edgeConfigUrl) return;
+      if (!edgeConfigStoreId) {
+        const edgeConfigUrl = process.env.EDGE_CONFIG;
+        if (!edgeConfigUrl) return;
+        
+        const urlMatch = edgeConfigUrl.match(/edge-config\.vercel\.com\/([^?]+)/);
+        if (!urlMatch) return;
+        edgeConfigStoreId = urlMatch[1];
+      }
       
-      const storeId = edgeConfigUrl.split('://')[1]?.split('.')[0];
-      if (!storeId) return;
+      if (!edgeConfigStoreId) return;
       
       const usageObj: Record<string, DailyUsage> = {};
       usage.forEach((value, key) => {
         usageObj[key] = value;
       });
       
-      const response = await fetch(`https://api.vercel.com/v1/edge-config/${storeId}/items`, {
+      const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${edgeConfigToken}`,
@@ -247,9 +290,9 @@ async function saveDailyUsage(usage: Map<string, DailyUsage>): Promise<void> {
 async function loadPlayerStats(): Promise<PlayerStats> {
   if (playerStatsCache) return playerStatsCache;
   
-  if (isEdgeConfigAvailable() && edgeConfig) {
+  if (isEdgeConfigAvailable() && edgeConfigGet) {
     try {
-      const edgeStatsStr = await edgeConfig.get(EDGE_PLAYER_STATS_KEY) as string | null;
+      const edgeStatsStr = await edgeConfigGet(EDGE_PLAYER_STATS_KEY) as string | null;
       if (edgeStatsStr) {
         const edgeStats = JSON.parse(edgeStatsStr) as PlayerStats;
         playerStatsCache = edgeStats;
@@ -273,13 +316,18 @@ async function savePlayerStats(stats: PlayerStats): Promise<void> {
   
   if (isEdgeConfigWriteAvailable()) {
     try {
-      const edgeConfigUrl = process.env.EDGE_CONFIG;
-      if (!edgeConfigUrl) return;
+      if (!edgeConfigStoreId) {
+        const edgeConfigUrl = process.env.EDGE_CONFIG;
+        if (!edgeConfigUrl) return;
+        
+        const urlMatch = edgeConfigUrl.match(/edge-config\.vercel\.com\/([^?]+)/);
+        if (!urlMatch) return;
+        edgeConfigStoreId = urlMatch[1];
+      }
       
-      const storeId = edgeConfigUrl.split('://')[1]?.split('.')[0];
-      if (!storeId) return;
+      if (!edgeConfigStoreId) return;
       
-      const response = await fetch(`https://api.vercel.com/v1/edge-config/${storeId}/items`, {
+      const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${edgeConfigToken}`,
