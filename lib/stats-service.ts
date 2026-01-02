@@ -1,22 +1,24 @@
 /**
  * Statistics Service für Besucher- und Download-Counter
  * Mit täglicher Nutzung und Player-Erkennung
- * Verwendet Vercel KV für persistente Speicherung
+ * Verwendet Vercel Edge Config für persistente Speicherung
  */
 
-// Vercel KV Import (optional, falls nicht konfiguriert)
-type KvClient = {
-  get: <T>(key: string) => Promise<T | null>;
-  set: (key: string, value: any) => Promise<void>;
-};
+// Vercel Edge Config Import (optional, falls nicht konfiguriert)
+let edgeConfig: any = null;
+let edgeConfigToken: string | null = null;
 
-let kv: KvClient | null = null;
 try {
-  const kvModule = require('@vercel/kv');
-  kv = kvModule.kv as KvClient;
+  const edgeConfigModule = require('@vercel/edge-config');
+  const connectionString = process.env.EDGE_CONFIG;
+  edgeConfigToken = process.env.EDGE_CONFIG_TOKEN || null;
+  
+  if (connectionString) {
+    edgeConfig = edgeConfigModule.getEdgeConfig(connectionString);
+  }
 } catch {
-  // KV nicht verfügbar, verwende In-Memory-Fallback
-  console.warn('[Stats] Vercel KV nicht verfügbar, verwende In-Memory-Speicher');
+  // Edge Config nicht verfügbar, verwende In-Memory-Fallback
+  console.warn('[Stats] Vercel Edge Config nicht verfügbar, verwende In-Memory-Speicher');
 }
 
 interface Stats {
@@ -28,7 +30,7 @@ interface Stats {
 interface DailyUsage {
   date: string; // YYYY-MM-DD
   downloads: number;
-  uniqueIPs: string[]; // Array statt Set für KV-Kompatibilität
+  uniqueIPs: string[]; // Array statt Set für Edge Config-Kompatibilität
 }
 
 interface PlayerStats {
@@ -39,42 +41,46 @@ interface PlayerStats {
 const INITIAL_VISITORS = 224232;
 const INITIAL_DOWNLOADS = 12231082;
 
-// Cache für aktuelle Stats (wird regelmäßig mit KV synchronisiert)
+// Cache für aktuelle Stats (wird regelmäßig mit Edge Config synchronisiert)
 let statsCache: Stats | null = null;
 let dailyUsageCache: Map<string, DailyUsage> | null = null;
 let playerStatsCache: PlayerStats | null = null;
 
-// KV Keys
-const KV_STATS_KEY = 'epg:stats';
-const KV_DAILY_USAGE_KEY = 'epg:dailyUsage';
-const KV_PLAYER_STATS_KEY = 'epg:playerStats';
+// Edge Config Keys
+const EDGE_STATS_KEY = 'epg_stats';
+const EDGE_DAILY_USAGE_KEY = 'epg_dailyUsage';
+const EDGE_PLAYER_STATS_KEY = 'epg_playerStats';
 
 /**
- * Prüft ob KV verfügbar ist
+ * Prüft ob Edge Config verfügbar ist
  */
-function isKvAvailable(): boolean {
+function isEdgeConfigAvailable(): boolean {
   try {
-    return kv !== null && typeof kv !== 'undefined';
+    return edgeConfig !== null && 
+           typeof edgeConfig !== 'undefined' && 
+           edgeConfigToken !== null &&
+           process.env.EDGE_CONFIG !== undefined;
   } catch {
     return false;
   }
 }
 
 /**
- * Lädt Stats aus KV oder gibt Standardwerte zurück
+ * Lädt Stats aus Edge Config oder gibt Standardwerte zurück
  */
 async function loadStats(): Promise<Stats> {
   if (statsCache) return statsCache;
   
-  if (isKvAvailable() && kv) {
+  if (isEdgeConfigAvailable() && edgeConfig) {
     try {
-      const kvStats = await kv.get(KV_STATS_KEY) as Stats | null;
-      if (kvStats) {
-        statsCache = kvStats;
-        return kvStats;
+      const edgeStatsStr = await edgeConfig.get(EDGE_STATS_KEY) as string | null;
+      if (edgeStatsStr) {
+        const edgeStats = JSON.parse(edgeStatsStr) as Stats;
+        statsCache = edgeStats;
+        return edgeStats;
       }
     } catch (error) {
-      console.error('[Stats] Fehler beim Laden aus KV:', error);
+      console.error('[Stats] Fehler beim Laden aus Edge Config:', error);
     }
   }
   
@@ -89,40 +95,67 @@ async function loadStats(): Promise<Stats> {
 }
 
 /**
- * Speichert Stats in KV
+ * Speichert Stats in Edge Config über REST API
  */
 async function saveStats(stats: Stats): Promise<void> {
   statsCache = stats;
   
-  if (isKvAvailable() && kv) {
+  if (isEdgeConfigAvailable() && edgeConfigToken) {
     try {
-      await kv.set(KV_STATS_KEY, stats);
+      const edgeConfigUrl = process.env.EDGE_CONFIG;
+      if (!edgeConfigUrl) return;
+      
+      // Extrahiere die Store-ID aus der Connection String
+      const storeId = edgeConfigUrl.split('://')[1]?.split('.')[0];
+      if (!storeId) return;
+      
+      const response = await fetch(`https://api.vercel.com/v1/edge-config/${storeId}/items`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${edgeConfigToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [
+            {
+              operation: 'update',
+              key: EDGE_STATS_KEY,
+              value: JSON.stringify(stats),
+            },
+          ],
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Edge Config API error: ${response.status}`);
+      }
     } catch (error) {
-      console.error('[Stats] Fehler beim Speichern in KV:', error);
+      console.error('[Stats] Fehler beim Speichern in Edge Config:', error);
     }
   }
 }
 
 /**
- * Lädt tägliche Nutzung aus KV
+ * Lädt tägliche Nutzung aus Edge Config
  */
 async function loadDailyUsage(): Promise<Map<string, DailyUsage>> {
   if (dailyUsageCache) return dailyUsageCache;
   
   const usageMap = new Map<string, DailyUsage>();
   
-  if (isKvAvailable() && kv) {
+  if (isEdgeConfigAvailable() && edgeConfig) {
     try {
-      const kvUsage = await kv.get(KV_DAILY_USAGE_KEY) as Record<string, DailyUsage> | null;
-      if (kvUsage) {
-        Object.entries(kvUsage).forEach(([date, usage]) => {
+      const edgeUsageStr = await edgeConfig.get(EDGE_DAILY_USAGE_KEY) as string | null;
+      if (edgeUsageStr) {
+        const edgeUsage = JSON.parse(edgeUsageStr) as Record<string, DailyUsage>;
+        Object.entries(edgeUsage).forEach(([date, usage]) => {
           usageMap.set(date, usage);
         });
         dailyUsageCache = usageMap;
         return usageMap;
       }
     } catch (error) {
-      console.error('[Stats] Fehler beim Laden der täglichen Nutzung aus KV:', error);
+      console.error('[Stats] Fehler beim Laden der täglichen Nutzung aus Edge Config:', error);
     }
   }
   
@@ -131,39 +164,66 @@ async function loadDailyUsage(): Promise<Map<string, DailyUsage>> {
 }
 
 /**
- * Speichert tägliche Nutzung in KV
+ * Speichert tägliche Nutzung in Edge Config über REST API
  */
 async function saveDailyUsage(usage: Map<string, DailyUsage>): Promise<void> {
   dailyUsageCache = usage;
   
-  if (isKvAvailable() && kv) {
+  if (isEdgeConfigAvailable() && edgeConfigToken) {
     try {
+      const edgeConfigUrl = process.env.EDGE_CONFIG;
+      if (!edgeConfigUrl) return;
+      
+      const storeId = edgeConfigUrl.split('://')[1]?.split('.')[0];
+      if (!storeId) return;
+      
       const usageObj: Record<string, DailyUsage> = {};
       usage.forEach((value, key) => {
         usageObj[key] = value;
       });
-      await kv.set(KV_DAILY_USAGE_KEY, usageObj);
+      
+      const response = await fetch(`https://api.vercel.com/v1/edge-config/${storeId}/items`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${edgeConfigToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [
+            {
+              operation: 'update',
+              key: EDGE_DAILY_USAGE_KEY,
+              value: JSON.stringify(usageObj),
+            },
+          ],
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Edge Config API error: ${response.status}`);
+      }
     } catch (error) {
-      console.error('[Stats] Fehler beim Speichern der täglichen Nutzung in KV:', error);
+      console.error('[Stats] Fehler beim Speichern der täglichen Nutzung in Edge Config:', error);
     }
   }
 }
 
 /**
- * Lädt Player-Stats aus KV
+ * Lädt Player-Stats aus Edge Config
  */
 async function loadPlayerStats(): Promise<PlayerStats> {
   if (playerStatsCache) return playerStatsCache;
   
-  if (isKvAvailable() && kv) {
+  if (isEdgeConfigAvailable() && edgeConfig) {
     try {
-      const kvStats = await kv.get(KV_PLAYER_STATS_KEY) as PlayerStats | null;
-      if (kvStats) {
-        playerStatsCache = kvStats;
-        return kvStats;
+      const edgeStatsStr = await edgeConfig.get(EDGE_PLAYER_STATS_KEY) as string | null;
+      if (edgeStatsStr) {
+        const edgeStats = JSON.parse(edgeStatsStr) as PlayerStats;
+        playerStatsCache = edgeStats;
+        return edgeStats;
       }
     } catch (error) {
-      console.error('[Stats] Fehler beim Laden der Player-Stats aus KV:', error);
+      console.error('[Stats] Fehler beim Laden der Player-Stats aus Edge Config:', error);
     }
   }
   
@@ -173,16 +233,41 @@ async function loadPlayerStats(): Promise<PlayerStats> {
 }
 
 /**
- * Speichert Player-Stats in KV
+ * Speichert Player-Stats in Edge Config über REST API
  */
 async function savePlayerStats(stats: PlayerStats): Promise<void> {
   playerStatsCache = stats;
   
-  if (isKvAvailable() && kv) {
+  if (isEdgeConfigAvailable() && edgeConfigToken) {
     try {
-      await kv.set(KV_PLAYER_STATS_KEY, stats);
+      const edgeConfigUrl = process.env.EDGE_CONFIG;
+      if (!edgeConfigUrl) return;
+      
+      const storeId = edgeConfigUrl.split('://')[1]?.split('.')[0];
+      if (!storeId) return;
+      
+      const response = await fetch(`https://api.vercel.com/v1/edge-config/${storeId}/items`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${edgeConfigToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [
+            {
+              operation: 'update',
+              key: EDGE_PLAYER_STATS_KEY,
+              value: JSON.stringify(stats),
+            },
+          ],
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Edge Config API error: ${response.status}`);
+      }
     } catch (error) {
-      console.error('[Stats] Fehler beim Speichern der Player-Stats in KV:', error);
+      console.error('[Stats] Fehler beim Speichern der Player-Stats in Edge Config:', error);
     }
   }
 }
