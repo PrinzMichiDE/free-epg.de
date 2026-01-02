@@ -46,12 +46,6 @@ export async function GET(request: Request) {
         // Cache-Header für Browser/CDN (1 Stunde)
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
       },
-      status: 200,
-      headers: {
-        'Content-Type': 'application/xml; charset=utf-8',
-        // Cache-Header für Browser/CDN (1 Stunde)
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
-      },
     });
   } catch (error) {
     // Auch bei Fehlern tracken (für Statistiken über fehlgeschlagene Requests)
