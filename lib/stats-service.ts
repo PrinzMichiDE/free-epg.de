@@ -106,312 +106,59 @@ interface PlayerStats {
 const INITIAL_VISITORS = 224232;
 const INITIAL_DOWNLOADS = 12231082;
 
-// Cache für aktuelle Stats (wird regelmäßig mit Edge Config synchronisiert)
-let statsCache: Stats | null = null;
-let dailyUsageCache: Map<string, DailyUsage> | null = null;
-let playerStatsCache: PlayerStats | null = null;
+// In-Memory Stats
+let stats: Stats = {
+  visitors: INITIAL_VISITORS,
+  downloads: INITIAL_DOWNLOADS,
+  lastReset: Date.now(),
+};
 
-// Edge Config Keys
-const EDGE_STATS_KEY = 'epg_stats';
-const EDGE_DAILY_USAGE_KEY = 'epg_dailyUsage';
-const EDGE_PLAYER_STATS_KEY = 'epg_playerStats';
+// Tägliche Nutzung (pro Datum)
+const dailyUsage: Map<string, DailyUsage> = new Map();
 
-/**
- * Prüft ob Edge Config verfügbar ist
- */
-function isEdgeConfigAvailable(): boolean {
-  // Initialisiere beim ersten Aufruf
-  if (!edgeConfigInitialized) {
-    initializeEdgeConfig();
-  }
-  
-  try {
-    const hasConnectionString = !!process.env.EDGE_CONFIG;
-    const hasGetFunction = edgeConfigGet !== null && typeof edgeConfigGet === 'function';
-    
-    // Für Reads reicht die Connection String und get Funktion
-    return hasConnectionString && hasGetFunction;
-  } catch {
-    return false;
-  }
-}
+// Player-Statistiken
+const playerStats: PlayerStats = {};
 
 /**
- * Prüft ob Edge Config für Writes verfügbar ist
- */
-function isEdgeConfigWriteAvailable(): boolean {
-  if (!edgeConfigInitialized) {
-    initializeEdgeConfig();
-  }
-  
-  try {
-    // Für Writes brauchen wir sowohl Connection String als auch Token
-    const hasConnectionString = !!process.env.EDGE_CONFIG;
-    const hasToken = edgeConfigToken !== null && edgeConfigToken !== undefined && edgeConfigToken !== '';
-    const hasStoreId = edgeConfigStoreId !== null;
-    
-    return hasConnectionString && hasToken && hasStoreId;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Lädt Stats aus Edge Config oder gibt Standardwerte zurück
+ * Lädt Stats (In-Memory)
  */
 async function loadStats(): Promise<Stats> {
-  if (statsCache) return statsCache;
-  
-  if (isEdgeConfigAvailable() && edgeConfigGet) {
-    try {
-      const edgeStatsStr = await edgeConfigGet(EDGE_STATS_KEY) as string | null;
-      if (edgeStatsStr) {
-        const edgeStats = JSON.parse(edgeStatsStr) as Stats;
-        statsCache = edgeStats;
-        return edgeStats;
-      }
-    } catch (error) {
-      console.error('[Stats] Fehler beim Laden aus Edge Config:', error);
-    }
-  }
-  
-  // Fallback: Standardwerte
-  const defaultStats: Stats = {
-    visitors: INITIAL_VISITORS,
-    downloads: INITIAL_DOWNLOADS,
-    lastReset: Date.now(),
-  };
-  statsCache = defaultStats;
-  return defaultStats;
+  return stats;
 }
 
 /**
- * Speichert Stats in Edge Config über REST API
+ * Speichert Stats (In-Memory)
  */
-async function saveStats(stats: Stats): Promise<void> {
-  statsCache = stats;
-  
-  if (isEdgeConfigWriteAvailable()) {
-    try {
-      if (!edgeConfigStoreId) {
-        const edgeConfigUrl = process.env.EDGE_CONFIG;
-        if (!edgeConfigUrl) return;
-        
-        // Extrahiere die Store-ID aus der Connection String
-        const urlMatch = edgeConfigUrl.match(/edge-config\.vercel\.com\/([^?]+)/);
-        if (!urlMatch) return;
-        edgeConfigStoreId = urlMatch[1];
-      }
-      
-      if (!edgeConfigStoreId) {
-        console.warn('[Stats] Edge Config Store-ID nicht gefunden');
-        return;
-      }
-      
-      if (!edgeConfigToken) {
-        console.warn('[Stats] Edge Config Token nicht gefunden. Token muss im EDGE_CONFIG URL-Parameter oder als EDGE_CONFIG_TOKEN gesetzt sein.');
-        return;
-      }
-      
-      // Verwende Vercel API für Writes
-      // API Endpoint: PATCH /v1/edge-config/{id}/items
-      // Store-ID muss MIT ecfg_ Präfix verwendet werden
-      const apiUrl = `https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`;
-      
-      const response = await fetch(apiUrl, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${edgeConfigToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: [
-            {
-              operation: 'upsert',
-              key: EDGE_STATS_KEY,
-              value: JSON.stringify(stats),
-            },
-          ],
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error');
-        // 403 bedeutet meist fehlende Berechtigung - nicht als kritischer Fehler behandeln
-        if (response.status === 403) {
-          console.warn(`[Stats] Edge Config Write nicht autorisiert (403). Der Token im EDGE_CONFIG hat möglicherweise nur Read-Berechtigung. Für Writes benötigt: EDGE_CONFIG_TOKEN mit Write-Berechtigung. Stats werden nur im Cache gespeichert.`);
-          return; // Stillschweigend fehlschlagen, Cache bleibt aktiv
-        }
-        throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
-      }
-    } catch (error) {
-      // Nur kritische Fehler loggen, nicht 403 (fehlende Berechtigung)
-      if (error instanceof Error && !error.message.includes('403')) {
-        console.error('[Stats] Fehler beim Speichern in Edge Config:', error);
-      }
-    }
-  }
+async function saveStats(newStats: Stats): Promise<void> {
+  stats = newStats;
 }
 
 /**
- * Lädt tägliche Nutzung aus Edge Config
+ * Lädt tägliche Nutzung (In-Memory)
  */
 async function loadDailyUsage(): Promise<Map<string, DailyUsage>> {
-  if (dailyUsageCache) return dailyUsageCache;
-  
-  const usageMap = new Map<string, DailyUsage>();
-  
-  if (isEdgeConfigAvailable() && edgeConfigGet) {
-    try {
-      const edgeUsageStr = await edgeConfigGet(EDGE_DAILY_USAGE_KEY) as string | null;
-      if (edgeUsageStr) {
-        const edgeUsage = JSON.parse(edgeUsageStr) as Record<string, DailyUsage>;
-        Object.entries(edgeUsage).forEach(([date, usage]) => {
-          usageMap.set(date, usage);
-        });
-        dailyUsageCache = usageMap;
-        return usageMap;
-      }
-    } catch (error) {
-      console.error('[Stats] Fehler beim Laden der täglichen Nutzung aus Edge Config:', error);
-    }
-  }
-  
-  dailyUsageCache = usageMap;
-  return usageMap;
+  return dailyUsage;
 }
 
 /**
- * Speichert tägliche Nutzung in Edge Config über REST API
+ * Speichert tägliche Nutzung (In-Memory)
  */
 async function saveDailyUsage(usage: Map<string, DailyUsage>): Promise<void> {
-  dailyUsageCache = usage;
-  
-  if (isEdgeConfigWriteAvailable()) {
-    try {
-      if (!edgeConfigStoreId) {
-        const edgeConfigUrl = process.env.EDGE_CONFIG;
-        if (!edgeConfigUrl) return;
-        
-        const urlMatch = edgeConfigUrl.match(/edge-config\.vercel\.com\/([^?]+)/);
-        if (!urlMatch) return;
-        edgeConfigStoreId = urlMatch[1];
-      }
-      
-      if (!edgeConfigStoreId) return;
-      
-      const usageObj: Record<string, DailyUsage> = {};
-      usage.forEach((value, key) => {
-        usageObj[key] = value;
-      });
-      
-      const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${edgeConfigToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: [
-            {
-              operation: 'upsert',
-              key: EDGE_DAILY_USAGE_KEY,
-              value: JSON.stringify(usageObj),
-            },
-          ],
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error');
-        if (response.status === 403) {
-          console.warn(`[Stats] Edge Config Write nicht autorisiert (403). Token benötigt für Write-Operationen.`);
-          return;
-        }
-        throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
-      }
-    } catch (error) {
-      if (error instanceof Error && !error.message.includes('403')) {
-        console.error('[Stats] Fehler beim Speichern der täglichen Nutzung in Edge Config:', error);
-      }
-    }
-  }
+  // Map wird direkt modifiziert, keine Aktion nötig
 }
 
 /**
- * Lädt Player-Stats aus Edge Config
+ * Lädt Player-Stats (In-Memory)
  */
 async function loadPlayerStats(): Promise<PlayerStats> {
-  if (playerStatsCache) return playerStatsCache;
-  
-  if (isEdgeConfigAvailable() && edgeConfigGet) {
-    try {
-      const edgeStatsStr = await edgeConfigGet(EDGE_PLAYER_STATS_KEY) as string | null;
-      if (edgeStatsStr) {
-        const edgeStats = JSON.parse(edgeStatsStr) as PlayerStats;
-        playerStatsCache = edgeStats;
-        return edgeStats;
-      }
-    } catch (error) {
-      console.error('[Stats] Fehler beim Laden der Player-Stats aus Edge Config:', error);
-    }
-  }
-  
-  const defaultStats: PlayerStats = {};
-  playerStatsCache = defaultStats;
-  return defaultStats;
+  return playerStats;
 }
 
 /**
- * Speichert Player-Stats in Edge Config über REST API
+ * Speichert Player-Stats (In-Memory)
  */
-async function savePlayerStats(stats: PlayerStats): Promise<void> {
-  playerStatsCache = stats;
-  
-  if (isEdgeConfigWriteAvailable()) {
-    try {
-      if (!edgeConfigStoreId) {
-        const edgeConfigUrl = process.env.EDGE_CONFIG;
-        if (!edgeConfigUrl) return;
-        
-        const urlMatch = edgeConfigUrl.match(/edge-config\.vercel\.com\/([^?]+)/);
-        if (!urlMatch) return;
-        edgeConfigStoreId = urlMatch[1];
-      }
-      
-      if (!edgeConfigStoreId) return;
-      
-      const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${edgeConfigToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: [
-            {
-              operation: 'upsert',
-              key: EDGE_PLAYER_STATS_KEY,
-              value: JSON.stringify(stats),
-            },
-          ],
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error');
-        if (response.status === 403) {
-          console.warn(`[Stats] Edge Config Write nicht autorisiert (403). Token benötigt für Write-Operationen.`);
-          return;
-        }
-        throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
-      }
-    } catch (error) {
-      if (error instanceof Error && !error.message.includes('403')) {
-        console.error('[Stats] Fehler beim Speichern der Player-Stats in Edge Config:', error);
-      }
-    }
-  }
+async function savePlayerStats(newStats: PlayerStats): Promise<void> {
+  Object.assign(playerStats, newStats);
 }
 
 /**
