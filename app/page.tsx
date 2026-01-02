@@ -76,112 +76,55 @@ export default function HomePage() {
             transition={{ delay: 0.1, duration: 0.5 }}
             className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-blue-500 to-purple-600 tracking-tight"
           >
-            EPG Service
+            Kostenloser TV-Programm-Guide
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-xl md:text-2xl text-slate-300 mb-3 flex items-center justify-center font-medium"
+            className="text-xl md:text-2xl text-slate-300 mb-4 flex items-center justify-center font-medium"
           >
             <SparklesIcon className="w-6 h-6 mr-2.5 text-emerald-400" />
-            Electronic Program Guide API
+            Für deine IPTV-App
           </motion.p>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="text-sm md:text-base text-slate-400"
+            className="text-base md:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed"
           >
-            Mehrere Quellen • Intelligent gemerged • Täglich aktualisiert
+            Einfach die URL kopieren, in deine IPTV-App einfügen und sofort alle deutschen TV-Sender mit Programmübersicht nutzen.
           </motion.p>
         </div>
 
-        {/* Ko-Fi Support Hero Section - Very Prominent */}
-        <div className="mb-12">
-          <KoFiSupport variant="hero" />
-        </div>
-
-        {/* AdSense Banner - Top */}
-        <div className="mb-8">
-          <AdSenseBanner 
-            adSlot="1234567890"
-            adFormat="auto"
-            className="max-w-4xl mx-auto"
-          />
-        </div>
-
-        {/* IPTV Link Card - Prominent */}
-        <div className="mb-10">
+        {/* Main CTA - IPTV Link Card - Most Prominent */}
+        <div className="mb-16">
           <IptvLinkCard />
         </div>
 
-        {/* Quick Links */}
-        <div className="mb-10">
-          <QuickLinks />
-        </div>
-
-        {/* Stats */}
-        <div id="stats" className="mb-10">
-          <StatsCard />
-        </div>
-
-        {/* EPG Preview */}
-        <div className="mb-10">
-          <EpgPreviewCard />
-        </div>
-
-        {/* Ko-Fi Support Card - Additional Prominent Placement */}
-        <div className="mb-10">
-          <KoFiSupport variant="card" />
-        </div>
-
-        {/* Performance Metrics */}
-        <div className="mb-10">
-          <PerformanceMetrics />
-        </div>
-
-        {/* AdSense Banner - Middle */}
-        <div className="mb-8">
-          <AdSenseBanner 
-            adSlot="1234567891"
-            adFormat="auto"
-            className="max-w-4xl mx-auto"
-          />
-        </div>
-
-        {/* Features */}
-        <div className="mb-10">
+        {/* Key Benefits - Simplified */}
+        <div className="mb-16">
           <FeaturesGrid />
         </div>
 
-        {/* Useful Features */}
-        <div className="mb-10">
-          <UsefulFeatures />
-        </div>
-
-        {/* TV Player Ultra */}
-        <div className="mb-10">
+        {/* Live TV Player */}
+        <div className="mb-16">
           <TvPlayerUltra />
         </div>
 
-        {/* AdSense Banner - After TV Player */}
-        <div className="mb-8">
-          <AdSenseBanner 
-            adSlot="1234567892"
-            adFormat="auto"
-            className="max-w-4xl mx-auto"
-          />
+        {/* Stats - Simple */}
+        <div id="stats" className="mb-16">
+          <StatsCard />
+        </div>
+
+        {/* Support Section */}
+        <div className="mb-16">
+          <KoFiSupport variant="hero" />
         </div>
 
         {/* FAQ Section */}
-        <div className="mb-10">
+        <div className="mb-16">
           <FaqSection />
-        </div>
-
-        {/* Support Banner */}
-        <div className="mb-10">
-          <SupportBanner />
         </div>
 
         {/* AdSense Banner - Bottom */}
@@ -195,9 +138,9 @@ export default function HomePage() {
 
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-white/10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
-            <p className="text-slate-400 text-sm font-medium">
-              Erstellt mit Next.js, TypeScript und Headless UI • Open Source
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-slate-400 text-sm font-medium text-center md:text-left">
+              Kostenloser Service • Keine Registrierung erforderlich • Open Source
             </p>
             <motion.a
               href="https://ko-fi.com/michelfritzsch"

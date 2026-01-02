@@ -52,8 +52,8 @@ export function IptvLinkCard() {
               <TvIcon className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">IPTV EPG URL</h2>
-              <p className="text-sm text-slate-400 mt-1">Für deine IPTV App</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Deine Programm-URL</h2>
+              <p className="text-sm text-slate-400 mt-1">Kopiere die URL und füge sie in deine IPTV-App ein</p>
             </div>
           </div>
           <motion.div
@@ -76,7 +76,7 @@ export function IptvLinkCard() {
         <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/10 rounded-xl p-6 mb-6 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-              EPG Endpoint
+              Programm-URL
             </span>
             <div className="flex items-center space-x-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
@@ -119,27 +119,36 @@ export function IptvLinkCard() {
 
         {/* Instructions */}
         <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-white flex items-center">
+          <h3 className="text-base font-semibold text-white flex items-center">
             <QrCodeIcon className="w-5 h-5 mr-2 text-emerald-400" />
-            So verwendest du die URL:
+            So einfach geht's:
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/5 rounded-xl p-4 hover:border-emerald-500/30 transition-all duration-300">
-              <div className="text-emerald-400 font-bold text-xl mb-2">1.</div>
-              <p className="text-slate-300 text-sm font-medium">
+            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/5 rounded-xl p-5 hover:border-emerald-500/30 transition-all duration-300">
+              <div className="text-emerald-400 font-bold text-2xl mb-2">1</div>
+              <p className="text-white text-sm font-medium mb-1">
                 URL kopieren
               </p>
-            </div>
-            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/5 rounded-xl p-4 hover:border-blue-500/30 transition-all duration-300">
-              <div className="text-blue-400 font-bold text-xl mb-2">2.</div>
-              <p className="text-slate-300 text-sm font-medium">
-                In IPTV App einfügen
+              <p className="text-slate-400 text-xs">
+                Klicke auf den Button oben
               </p>
             </div>
-            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/5 rounded-xl p-4 hover:border-purple-500/30 transition-all duration-300">
-              <div className="text-purple-400 font-bold text-xl mb-2">3.</div>
-              <p className="text-slate-300 text-sm font-medium">
-                EPG aktualisieren
+            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/5 rounded-xl p-5 hover:border-blue-500/30 transition-all duration-300">
+              <div className="text-blue-400 font-bold text-2xl mb-2">2</div>
+              <p className="text-white text-sm font-medium mb-1">
+                In App einfügen
+              </p>
+              <p className="text-slate-400 text-xs">
+                Öffne deine IPTV-App und füge die URL ein
+              </p>
+            </div>
+            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/5 rounded-xl p-5 hover:border-purple-500/30 transition-all duration-300">
+              <div className="text-purple-400 font-bold text-2xl mb-2">3</div>
+              <p className="text-white text-sm font-medium mb-1">
+                Fertig!
+              </p>
+              <p className="text-slate-400 text-xs">
+                Programmübersicht wird automatisch geladen
               </p>
             </div>
           </div>
@@ -147,8 +156,8 @@ export function IptvLinkCard() {
 
         {/* Compatible Apps Info */}
         <div className="mt-8 pt-6 border-t border-white/10">
-          <p className="text-xs text-slate-400 text-center font-medium">
-            Kompatibel mit: TiviMate, IPTV Smarters Pro, Perfect Player und vielen anderen IPTV Apps
+          <p className="text-sm text-slate-400 text-center font-medium">
+            Funktioniert mit allen gängigen IPTV-Apps wie TiviMate, IPTV Smarters Pro, Perfect Player und vielen mehr
           </p>
         </div>
       </div>

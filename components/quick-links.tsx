@@ -64,8 +64,8 @@ export function QuickLinks() {
         transition={{ duration: 0.5 }}
         className="text-center mb-8"
       >
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">Schnellzugriff</h2>
-        <p className="text-slate-400 text-base">Direkt zu den wichtigsten Bereichen</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">Weitere Funktionen</h2>
+        <p className="text-slate-400 text-base">Entdecke was der Service noch zu bieten hat</p>
       </motion.div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

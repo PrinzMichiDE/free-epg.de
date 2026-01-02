@@ -22,60 +22,32 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    icon: ServerStackIcon,
-    title: 'Multi-Source EPG',
-    description: 'Kombiniert automatisch mehrere EPG-Quellen für maximale Abdeckung',
+    icon: GlobeAltIcon,
+    title: 'Deutsche TV-Sender',
+    description: 'Vollständige Programmübersicht für alle wichtigen deutschen Fernsehsender',
     color: 'text-blue-400',
     gradient: 'from-blue-500/10 to-blue-600/5',
   },
   {
-    icon: BoltIcon,
-    title: 'Blitzschnell',
-    description: 'In-Memory Caching und CDN-Optimierung für sofortige Antworten',
-    color: 'text-yellow-400',
-    gradient: 'from-yellow-500/10 to-yellow-600/5',
-  },
-  {
     icon: ArrowPathIcon,
-    title: 'Auto-Update',
-    description: 'Täglich automatisch aktualisiert - immer die neuesten Programmdaten',
+    title: 'Täglich aktualisiert',
+    description: 'Automatische Aktualisierung - immer die neuesten Programmdaten',
     color: 'text-emerald-400',
     gradient: 'from-emerald-500/10 to-emerald-600/5',
   },
   {
+    icon: BoltIcon,
+    title: 'Sofort einsatzbereit',
+    description: 'Einfach URL kopieren und in deiner IPTV-App einfügen - fertig',
+    color: 'text-yellow-400',
+    gradient: 'from-yellow-500/10 to-yellow-600/5',
+  },
+  {
     icon: ShieldCheckIcon,
-    title: 'Zuverlässig',
-    description: 'Intelligentes Merging mit Deduplizierung und Fehlerbehandlung',
+    title: 'Zuverlässig & kostenlos',
+    description: '100% kostenlos, ohne Registrierung und immer verfügbar',
     color: 'text-purple-400',
     gradient: 'from-purple-500/10 to-purple-600/5',
-  },
-  {
-    icon: GlobeAltIcon,
-    title: 'Deutschland-Fokus',
-    description: 'Spezialisiert auf deutsche TV-Sender (GlobeTV + EPGShare)',
-    color: 'text-red-400',
-    gradient: 'from-red-500/10 to-red-600/5',
-  },
-  {
-    icon: RocketLaunchIcon,
-    title: 'Vercel Edge',
-    description: 'Global verfügbar über Vercel Edge Network',
-    color: 'text-cyan-400',
-    gradient: 'from-cyan-500/10 to-cyan-600/5',
-  },
-  {
-    icon: ClockIcon,
-    title: '24/7 Verfügbar',
-    description: 'Immer online, keine Wartungszeiten oder Ausfälle',
-    color: 'text-pink-400',
-    gradient: 'from-pink-500/10 to-pink-600/5',
-  },
-  {
-    icon: DocumentTextIcon,
-    title: 'XML & GZ Support',
-    description: 'Unterstützt sowohl .xml als auch .xml.gz Formate',
-    color: 'text-orange-400',
-    gradient: 'from-orange-500/10 to-orange-600/5',
   },
 ];
 
@@ -111,10 +83,10 @@ export function FeaturesGrid() {
         className="text-center mb-12"
       >
         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
-          Leistungsstarker EPG Service
+          Warum diesen Service nutzen?
         </h2>
         <p className="text-slate-400 text-lg md:text-xl">
-          Alles was du für deine IPTV-Anwendung brauchst
+          Einfach, schnell und zuverlässig
         </p>
       </motion.div>
 
@@ -122,7 +94,7 @@ export function FeaturesGrid() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto"
       >
         {features.map((feature, idx) => (
           <motion.div
