@@ -37,6 +37,32 @@ export default function RootLayout({
             gtag('config', 'G-340371068', {
               page_path: window.location.pathname,
             });
+            
+            // Track page views on client-side navigation (Next.js)
+            if (typeof window !== 'undefined') {
+              const originalPushState = history.pushState;
+              const originalReplaceState = history.replaceState;
+              
+              history.pushState = function(...args) {
+                originalPushState.apply(history, args);
+                gtag('config', 'G-340371068', {
+                  page_path: window.location.pathname + window.location.search,
+                });
+              };
+              
+              history.replaceState = function(...args) {
+                originalReplaceState.apply(history, args);
+                gtag('config', 'G-340371068', {
+                  page_path: window.location.pathname + window.location.search,
+                });
+              };
+              
+              window.addEventListener('popstate', function() {
+                gtag('config', 'G-340371068', {
+                  page_path: window.location.pathname + window.location.search,
+                });
+              });
+            }
           `}
         </Script>
         <Script
