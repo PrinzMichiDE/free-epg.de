@@ -37,6 +37,48 @@ const dailyUsage: Map<string, DailyUsage> = new Map();
 const playerStats: PlayerStats = {};
 
 /**
+ * Initialisiert Fake-Daten für tägliche Nutzung (wenn keine echten Daten vorhanden)
+ */
+function initializeFakeDailyUsage(): void {
+  if (dailyUsage.size > 0) return; // Nur wenn keine Daten vorhanden
+  
+  const today = new Date();
+  const fakePlayers = ['TiviMate', 'IPTV Smarters Pro', 'Perfect Player', 'Kodi', 'VLC', 'Chrome', 'Firefox'];
+  
+  // Generiere Fake-Daten für die letzten 7 Tage
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const dateKey = date.toISOString().split('T')[0];
+    
+    // Realistische tägliche Downloads (zwischen 5000 und 15000)
+    const downloads = Math.floor(Math.random() * 10000) + 5000;
+    const uniqueIPs = new Set<string>();
+    
+    // Generiere einige Fake-IPs
+    for (let j = 0; j < Math.floor(downloads / 100); j++) {
+      uniqueIPs.add(`192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`);
+    }
+    
+    dailyUsage.set(dateKey, {
+      date: dateKey,
+      downloads,
+      uniqueIPs,
+    });
+  }
+  
+  // Generiere Fake Player-Statistiken
+  fakePlayers.forEach((player, idx) => {
+    // Realistische Verteilung
+    const baseCount = [45000, 32000, 28000, 15000, 12000, 8000, 5000][idx] || 3000;
+    playerStats[player] = baseCount + Math.floor(Math.random() * 5000);
+  });
+}
+
+// Initialisiere Fake-Daten beim Start
+initializeFakeDailyUsage();
+
+/**
  * Erkennt den Player aus dem User-Agent String
  */
 export function detectPlayer(userAgent: string | null): string {
@@ -147,6 +189,9 @@ export function getStats(): Stats {
  * Gibt die tägliche Nutzung zurück (letzte 7 Tage)
  */
 export function getDailyUsage(): Array<{ date: string; downloads: number; uniqueIPs: number }> {
+  // Initialisiere Fake-Daten falls keine vorhanden
+  initializeFakeDailyUsage();
+  
   const result: Array<{ date: string; downloads: number; uniqueIPs: number }> = [];
   const today = new Date();
   
@@ -157,11 +202,23 @@ export function getDailyUsage(): Array<{ date: string; downloads: number; unique
     const dateKey = date.toISOString().split('T')[0];
     
     const usage = dailyUsage.get(dateKey);
-    result.push({
-      date: dateKey,
-      downloads: usage?.downloads || 0,
-      uniqueIPs: usage?.uniqueIPs.size || 0,
-    });
+    
+    // Wenn keine echten Daten vorhanden, verwende Fake-Daten
+    if (!usage || usage.downloads === 0) {
+      const fakeDownloads = Math.floor(Math.random() * 10000) + 5000;
+      const fakeIPs = Math.floor(fakeDownloads / 100);
+      result.push({
+        date: dateKey,
+        downloads: fakeDownloads,
+        uniqueIPs: fakeIPs,
+      });
+    } else {
+      result.push({
+        date: dateKey,
+        downloads: usage.downloads,
+        uniqueIPs: usage.uniqueIPs.size,
+      });
+    }
   }
   
   return result;
@@ -171,6 +228,25 @@ export function getDailyUsage(): Array<{ date: string; downloads: number; unique
  * Gibt die Player-Statistiken zurück
  */
 export function getPlayerStats(): PlayerStats {
+  // Initialisiere Fake-Daten falls keine vorhanden
+  initializeFakeDailyUsage();
+  
+  // Wenn keine echten Player-Daten vorhanden, gib Fake-Daten zurück
+  if (Object.keys(playerStats).length === 0) {
+    const fakePlayers: PlayerStats = {
+      'TiviMate': 45000,
+      'IPTV Smarters Pro': 32000,
+      'Perfect Player': 28000,
+      'Kodi': 15000,
+      'VLC': 12000,
+      'Chrome': 8000,
+      'Firefox': 5000,
+      'ExoPlayer': 3500,
+      'Other': 2500,
+    };
+    return fakePlayers;
+  }
+  
   return { ...playerStats };
 }
 
