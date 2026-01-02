@@ -7,18 +7,28 @@
 // Vercel Edge Config Import (optional, falls nicht konfiguriert)
 let edgeConfig: any = null;
 let edgeConfigToken: string | null = null;
+let edgeConfigInitialized = false;
 
-try {
-  const edgeConfigModule = require('@vercel/edge-config');
+// Initialisiere Edge Config nur wenn Umgebungsvariablen gesetzt sind
+function initializeEdgeConfig(): void {
+  if (edgeConfigInitialized) return;
+  edgeConfigInitialized = true;
+  
   const connectionString = process.env.EDGE_CONFIG;
   edgeConfigToken = process.env.EDGE_CONFIG_TOKEN || null;
   
-  if (connectionString) {
-    edgeConfig = edgeConfigModule.getEdgeConfig(connectionString);
+  // Nur initialisieren wenn Connection String vorhanden ist
+  if (!connectionString) {
+    return; // Keine Warnung, da Edge Config optional ist
   }
-} catch {
-  // Edge Config nicht verfügbar, verwende In-Memory-Fallback
-  console.warn('[Stats] Vercel Edge Config nicht verfügbar, verwende In-Memory-Speicher');
+  
+  try {
+    const edgeConfigModule = require('@vercel/edge-config');
+    edgeConfig = edgeConfigModule.getEdgeConfig(connectionString);
+  } catch (error) {
+    // Nur warnen wenn Connection String vorhanden aber Initialisierung fehlschlägt
+    console.warn('[Stats] Vercel Edge Config Initialisierung fehlgeschlagen:', error);
+  }
 }
 
 interface Stats {
@@ -55,11 +65,34 @@ const EDGE_PLAYER_STATS_KEY = 'epg_playerStats';
  * Prüft ob Edge Config verfügbar ist
  */
 function isEdgeConfigAvailable(): boolean {
+  // Initialisiere beim ersten Aufruf
+  if (!edgeConfigInitialized) {
+    initializeEdgeConfig();
+  }
+  
   try {
-    return edgeConfig !== null && 
-           typeof edgeConfig !== 'undefined' && 
-           edgeConfigToken !== null &&
-           process.env.EDGE_CONFIG !== undefined;
+    const hasConnectionString = !!process.env.EDGE_CONFIG;
+    const hasConfig = edgeConfig !== null && typeof edgeConfig !== 'undefined';
+    
+    // Für Reads reicht die Connection String, für Writes brauchen wir auch den Token
+    return hasConnectionString && hasConfig;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Prüft ob Edge Config für Writes verfügbar ist
+ */
+function isEdgeConfigWriteAvailable(): boolean {
+  if (!edgeConfigInitialized) {
+    initializeEdgeConfig();
+  }
+  
+  try {
+    return isEdgeConfigAvailable() && 
+           edgeConfigToken !== null && 
+           edgeConfigToken !== undefined;
   } catch {
     return false;
   }
@@ -100,7 +133,7 @@ async function loadStats(): Promise<Stats> {
 async function saveStats(stats: Stats): Promise<void> {
   statsCache = stats;
   
-  if (isEdgeConfigAvailable() && edgeConfigToken) {
+  if (isEdgeConfigWriteAvailable()) {
     try {
       const edgeConfigUrl = process.env.EDGE_CONFIG;
       if (!edgeConfigUrl) return;
@@ -169,7 +202,7 @@ async function loadDailyUsage(): Promise<Map<string, DailyUsage>> {
 async function saveDailyUsage(usage: Map<string, DailyUsage>): Promise<void> {
   dailyUsageCache = usage;
   
-  if (isEdgeConfigAvailable() && edgeConfigToken) {
+  if (isEdgeConfigWriteAvailable()) {
     try {
       const edgeConfigUrl = process.env.EDGE_CONFIG;
       if (!edgeConfigUrl) return;
@@ -238,7 +271,7 @@ async function loadPlayerStats(): Promise<PlayerStats> {
 async function savePlayerStats(stats: PlayerStats): Promise<void> {
   playerStatsCache = stats;
   
-  if (isEdgeConfigAvailable() && edgeConfigToken) {
+  if (isEdgeConfigWriteAvailable()) {
     try {
       const edgeConfigUrl = process.env.EDGE_CONFIG;
       if (!edgeConfigUrl) return;
