@@ -38,7 +38,7 @@ interface XmlTvRoot {
   };
 }
 
-// EPG Quellen Konfiguration
+// EPG Quellen Konfiguration (Primäre Quellen)
 const EPG_SOURCES = [
   {
     url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Germany/germany1.xml',
@@ -47,6 +47,18 @@ const EPG_SOURCES = [
   {
     url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
     compressed: true,
+  },
+];
+
+// Fallback Quellen (werden verwendet, wenn primäre Quellen fehlschlagen)
+const EPG_FALLBACK_SOURCES = [
+  {
+    url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
+    compressed: true,
+  },
+  {
+    url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml',
+    compressed: false,
   },
 ];
 
@@ -76,14 +88,17 @@ const builder = new XMLBuilder(builderOptions);
 
 /**
  * Lädt eine einzelne EPG Quelle (mit oder ohne gz Komprimierung)
+ * Gibt null zurück bei Fehler (für Fallback-Mechanismus)
  */
-async function loadSingleSource(url: string, compressed: boolean): Promise<string> {
+async function loadSingleSource(url: string, compressed: boolean): Promise<string | null> {
   console.log(`[EPG] Lade Quelle: ${url} (compressed: ${compressed})`);
 
   try {
     const response = await fetch(url, {
       // Kein Next.js Cache auf Vercel, um immer frische Daten zu bekommen
       cache: 'no-store',
+      // Timeout nach 30 Sekunden
+      signal: AbortSignal.timeout(30000),
     });
 
     if (!response.ok) {
@@ -101,7 +116,7 @@ async function loadSingleSource(url: string, compressed: boolean): Promise<strin
     }
   } catch (error) {
     console.error(`[EPG] Fehler beim Laden von ${url}:`, error);
-    throw error;
+    return null; // Return null statt throw für Fallback-Mechanismus
   }
 }
 
@@ -184,32 +199,62 @@ function mergeEpgData(xmlDataArray: string[]): string {
 
 /**
  * Lädt alle EPG Quellen und merged sie
+ * Verwendet Fallback-Quellen, wenn primäre Quellen fehlschlagen
  */
 export async function loadEpgData(): Promise<string> {
   const startTime = Date.now();
-  console.log(`[EPG] Lade ${EPG_SOURCES.length} EPG Quellen...`);
+  console.log(`[EPG] Lade ${EPG_SOURCES.length} primäre EPG Quellen...`);
 
-  try {
-    // Alle Quellen parallel laden
-    const loadPromises = EPG_SOURCES.map((source) =>
-      loadSingleSource(source.url, source.compressed)
-    );
+  // Versuche primäre Quellen zu laden
+  const loadPromises = EPG_SOURCES.map((source) =>
+    loadSingleSource(source.url, source.compressed)
+  );
 
-    const xmlDataArray = await Promise.all(loadPromises);
-
-    // Daten mergen
-    const mergedXml = mergeEpgData(xmlDataArray);
-
-    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(
-      `[EPG] Erfolgreich geladen in ${duration}s (${Math.round(mergedXml.length / 1024)} KB)`
-    );
-
-    return mergedXml;
-  } catch (error) {
-    console.error('[EPG] Fehler beim Laden der EPG Daten:', error);
-    throw error;
+  const primaryResults = await Promise.all(loadPromises);
+  
+  // Filtere erfolgreiche Ergebnisse heraus
+  const successfulData = primaryResults.filter((data): data is string => data !== null);
+  
+  // Wenn mindestens eine primäre Quelle erfolgreich war, merge die Daten
+  if (successfulData.length > 0) {
+    console.log(`[EPG] ${successfulData.length}/${EPG_SOURCES.length} primäre Quellen erfolgreich geladen`);
+    
+    try {
+      const mergedXml = mergeEpgData(successfulData);
+      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+      console.log(
+        `[EPG] Erfolgreich geladen in ${duration}s (${Math.round(mergedXml.length / 1024)} KB)`
+      );
+      return mergedXml;
+    } catch (error) {
+      console.error('[EPG] Fehler beim Mergen der primären Daten:', error);
+      // Fallback wird verwendet
+    }
   }
+
+  // Alle primären Quellen fehlgeschlagen - verwende Fallback
+  console.log('[EPG] Alle primären Quellen fehlgeschlagen, verwende Fallback-Quellen...');
+  
+  const fallbackPromises = EPG_FALLBACK_SOURCES.map((source) =>
+    loadSingleSource(source.url, source.compressed)
+  );
+
+  const fallbackResults = await Promise.all(fallbackPromises);
+  const fallbackData = fallbackResults.filter((data): data is string => data !== null);
+
+  if (fallbackData.length === 0) {
+    throw new Error('Alle EPG Quellen (primär und Fallback) sind fehlgeschlagen');
+  }
+
+  console.log(`[EPG] ${fallbackData.length}/${EPG_FALLBACK_SOURCES.length} Fallback-Quellen erfolgreich geladen`);
+  
+  const mergedXml = mergeEpgData(fallbackData);
+  const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+  console.log(
+    `[EPG] Fallback erfolgreich geladen in ${duration}s (${Math.round(mergedXml.length / 1024)} KB)`
+  );
+
+  return mergedXml;
 }
 
 /**

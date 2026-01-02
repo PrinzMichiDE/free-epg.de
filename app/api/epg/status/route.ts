@@ -28,11 +28,27 @@ export async function GET() {
             name: 'GlobeTV Germany EPG',
             url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Germany/germany1.xml',
             type: 'xml',
+            priority: 'primary',
           },
           {
             name: 'EPGShare DE1',
             url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
             type: 'xml.gz',
+            priority: 'primary',
+          },
+        ],
+        fallbackSources: [
+          {
+            name: 'EPGShare DE1 (Fallback)',
+            url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
+            type: 'xml.gz',
+            priority: 'fallback',
+          },
+          {
+            name: 'EPGShare DE1 XML (Fallback)',
+            url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml',
+            type: 'xml',
+            priority: 'fallback',
           },
         ],
         endpoints: {
