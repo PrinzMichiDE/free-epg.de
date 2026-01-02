@@ -16,7 +16,6 @@ function initializeEdgeConfig(): void {
   edgeConfigInitialized = true;
   
   const connectionString = process.env.EDGE_CONFIG;
-  edgeConfigToken = process.env.EDGE_CONFIG_TOKEN || null;
   
   // Nur initialisieren wenn Connection String vorhanden ist
   if (!connectionString) {
@@ -24,10 +23,22 @@ function initializeEdgeConfig(): void {
   }
   
   try {
-    // Extrahiere Store-ID aus Connection String (Format: https://edge-config.vercel.com/{storeId}?token=...)
+    // Extrahiere Store-ID und Token aus Connection String
+    // Format: https://edge-config.vercel.com/{storeId}?token={token}
     const urlMatch = connectionString.match(/edge-config\.vercel\.com\/([^?]+)/);
     if (urlMatch) {
       edgeConfigStoreId = urlMatch[1];
+    }
+    
+    // Extrahiere Token aus Query String
+    const tokenMatch = connectionString.match(/[?&]token=([^&]+)/);
+    if (tokenMatch) {
+      edgeConfigToken = decodeURIComponent(tokenMatch[1]);
+    }
+    
+    // Fallback: Prüfe auch separate EDGE_CONFIG_TOKEN Variable
+    if (!edgeConfigToken) {
+      edgeConfigToken = process.env.EDGE_CONFIG_TOKEN || null;
     }
     
     // Importiere Edge Config get Funktion
@@ -61,6 +72,7 @@ function initializeEdgeConfig(): void {
     console.warn('[Stats] Vercel Edge Config Initialisierung fehlgeschlagen:', error);
     edgeConfigGet = null;
     edgeConfigStoreId = null;
+    edgeConfigToken = null;
   }
 }
 
