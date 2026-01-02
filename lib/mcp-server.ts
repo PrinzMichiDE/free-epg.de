@@ -3,6 +3,9 @@
  * Provides a server-side implementation of the MCP protocol for HTTP streaming
  */
 
+import { getEpgData, getAvailableCountries, getCountryConfig } from './epg-service';
+import { XMLParser } from 'fast-xml-parser';
+
 export interface MCPMessage {
   jsonrpc: '2.0';
   id?: string | number | null;
@@ -47,6 +50,15 @@ export interface MCPResource {
   mimeType?: string;
 }
 
+// XML Parser für EPG-Daten
+const xmlParser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: '@_',
+  textNodeName: '#text',
+  parseAttributeValue: false,
+  trimValues: true,
+});
+
 export class MCPServer {
   private tools: Map<string, MCPTool> = new Map();
   private resources: Map<string, MCPResource> = new Map();
@@ -54,6 +66,7 @@ export class MCPServer {
 
   constructor() {
     this.registerDefaultTools();
+    this.registerEpgTools();
     this.registerDefaultResources();
   }
 
@@ -306,6 +319,17 @@ export class MCPServer {
           tools: Array.from(this.tools.keys()),
           resources: Array.from(this.resources.keys()),
         };
+      // EPG Tools
+      case 'get_available_countries':
+        return this.getAvailableCountries();
+      case 'get_channels':
+        return this.getChannels(args.country || 'DE');
+      case 'get_programme':
+        return this.getProgramme(args.country || 'DE', args.channelId);
+      case 'get_current_programmes':
+        return this.getCurrentProgrammes(args.country || 'DE', args.channelId);
+      case 'search_programmes':
+        return this.searchProgrammes(args.country || 'DE', args.query, args.limit || 10);
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
@@ -366,6 +390,248 @@ export class MCPServer {
         properties: {},
       },
     });
+  }
+
+  /**
+   * Register EPG-related tools
+   */
+  private registerEpgTools(): void {
+    this.registerTool({
+      name: 'get_available_countries',
+      description: 'Gets a list of all available countries with EPG data',
+      inputSchema: {
+        type: 'object',
+        properties: {},
+      },
+    });
+
+    this.registerTool({
+      name: 'get_channels',
+      description: 'Gets all TV channels for a specific country',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          country: {
+            type: 'string',
+            description: 'Country code (e.g., DE, US, GB, FR). Default: DE',
+          },
+        },
+      },
+    });
+
+    this.registerTool({
+      name: 'get_programme',
+      description: 'Gets the programme schedule for a specific TV channel',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          country: {
+            type: 'string',
+            description: 'Country code (e.g., DE, US, GB, FR). Default: DE',
+          },
+          channelId: {
+            type: 'string',
+            description: 'Channel ID to get programme for',
+          },
+        },
+        required: ['channelId'],
+      },
+    });
+
+    this.registerTool({
+      name: 'get_current_programmes',
+      description: 'Gets currently airing programmes for a country or specific channel',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          country: {
+            type: 'string',
+            description: 'Country code (e.g., DE, US, GB, FR). Default: DE',
+          },
+          channelId: {
+            type: 'string',
+            description: 'Optional: Channel ID to filter by. If not provided, returns all current programmes',
+          },
+        },
+      },
+    });
+
+    this.registerTool({
+      name: 'search_programmes',
+      description: 'Searches for programmes by title or description',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          country: {
+            type: 'string',
+            description: 'Country code (e.g., DE, US, GB, FR). Default: DE',
+          },
+          query: {
+            type: 'string',
+            description: 'Search query to find programmes',
+          },
+          limit: {
+            type: 'number',
+            description: 'Maximum number of results to return. Default: 10',
+          },
+        },
+        required: ['query'],
+      },
+    });
+  }
+
+  /**
+   * Get available countries
+   */
+  private getAvailableCountries(): any {
+    const countries = getAvailableCountries();
+    return {
+      countries,
+      count: countries.length,
+    };
+  }
+
+  /**
+   * Get channels for a country
+   */
+  private async getChannels(countryCode: string): Promise<any> {
+    try {
+      const xmlData = await getEpgData(countryCode);
+      const parsed = xmlParser.parse(xmlData);
+      const tv = parsed.tv || {};
+      const channels = Array.isArray(tv.channel) ? tv.channel : tv.channel ? [tv.channel] : [];
+
+      return {
+        country: countryCode.toUpperCase(),
+        channels: channels.map((ch: any) => ({
+          id: ch['@_id'],
+          name: Array.isArray(ch['display-name']) ? ch['display-name'][0] : ch['display-name'],
+          icon: ch.icon?.['@_src'],
+        })),
+        count: channels.length,
+      };
+    } catch (error) {
+      throw new Error(`Failed to get channels: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * Get programme for a specific channel
+   */
+  private async getProgramme(countryCode: string, channelId: string): Promise<any> {
+    if (!channelId) {
+      throw new Error('channelId is required');
+    }
+
+    try {
+      const xmlData = await getEpgData(countryCode);
+      const parsed = xmlParser.parse(xmlData);
+      const tv = parsed.tv || {};
+      const programmes = Array.isArray(tv.programme) ? tv.programme : tv.programme ? [tv.programme] : [];
+
+      const channelProgrammes = programmes
+        .filter((prog: any) => prog['@_channel'] === channelId)
+        .map((prog: any) => ({
+          start: prog['@_start'],
+          stop: prog['@_stop'],
+          title: typeof prog.title === 'string' ? prog.title : prog.title?.['#text'] || prog.title?.[0]?.['#text'] || '',
+          description: typeof prog.desc === 'string' ? prog.desc : prog.desc?.['#text'] || prog.desc?.[0]?.['#text'] || '',
+          category: Array.isArray(prog.category) ? prog.category : prog.category ? [prog.category] : [],
+        }))
+        .sort((a: any, b: any) => a.start.localeCompare(b.start));
+
+      return {
+        country: countryCode.toUpperCase(),
+        channelId,
+        programmes: channelProgrammes,
+        count: channelProgrammes.length,
+      };
+    } catch (error) {
+      throw new Error(`Failed to get programme: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * Get currently airing programmes
+   */
+  private async getCurrentProgrammes(countryCode: string, channelId?: string): Promise<any> {
+    try {
+      const now = new Date();
+      const nowStr = now.toISOString().replace(/[-:]/g, '').split('.')[0] + ' +0000';
+
+      const xmlData = await getEpgData(countryCode);
+      const parsed = xmlParser.parse(xmlData);
+      const tv = parsed.tv || {};
+      const programmes = Array.isArray(tv.programme) ? tv.programme : tv.programme ? [tv.programme] : [];
+
+      const currentProgrammes = programmes
+        .filter((prog: any) => {
+          if (channelId && prog['@_channel'] !== channelId) return false;
+          const start = prog['@_start'];
+          const stop = prog['@_stop'];
+          return start <= nowStr && stop >= nowStr;
+        })
+        .map((prog: any) => ({
+          channel: prog['@_channel'],
+          start: prog['@_start'],
+          stop: prog['@_stop'],
+          title: typeof prog.title === 'string' ? prog.title : prog.title?.['#text'] || prog.title?.[0]?.['#text'] || '',
+          description: typeof prog.desc === 'string' ? prog.desc : prog.desc?.['#text'] || prog.desc?.[0]?.['#text'] || '',
+          category: Array.isArray(prog.category) ? prog.category : prog.category ? [prog.category] : [],
+        }));
+
+      return {
+        country: countryCode.toUpperCase(),
+        channelId: channelId || 'all',
+        currentProgrammes,
+        count: currentProgrammes.length,
+        timestamp: now.toISOString(),
+      };
+    } catch (error) {
+      throw new Error(`Failed to get current programmes: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  /**
+   * Search programmes
+   */
+  private async searchProgrammes(countryCode: string, query: string, limit: number = 10): Promise<any> {
+    if (!query) {
+      throw new Error('query is required');
+    }
+
+    try {
+      const searchQuery = query.toLowerCase();
+      const xmlData = await getEpgData(countryCode);
+      const parsed = xmlParser.parse(xmlData);
+      const tv = parsed.tv || {};
+      const programmes = Array.isArray(tv.programme) ? tv.programme : tv.programme ? [tv.programme] : [];
+
+      const matchingProgrammes = programmes
+        .filter((prog: any) => {
+          const title = typeof prog.title === 'string' ? prog.title : prog.title?.['#text'] || prog.title?.[0]?.['#text'] || '';
+          const desc = typeof prog.desc === 'string' ? prog.desc : prog.desc?.['#text'] || prog.desc?.[0]?.['#text'] || '';
+          return title.toLowerCase().includes(searchQuery) || desc.toLowerCase().includes(searchQuery);
+        })
+        .slice(0, limit)
+        .map((prog: any) => ({
+          channel: prog['@_channel'],
+          start: prog['@_start'],
+          stop: prog['@_stop'],
+          title: typeof prog.title === 'string' ? prog.title : prog.title?.['#text'] || prog.title?.[0]?.['#text'] || '',
+          description: typeof prog.desc === 'string' ? prog.desc : prog.desc?.['#text'] || prog.desc?.[0]?.['#text'] || '',
+          category: Array.isArray(prog.category) ? prog.category : prog.category ? [prog.category] : [],
+        }));
+
+      return {
+        country: countryCode.toUpperCase(),
+        query,
+        programmes: matchingProgrammes,
+        count: matchingProgrammes.length,
+      };
+    } catch (error) {
+      throw new Error(`Failed to search programmes: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   /**

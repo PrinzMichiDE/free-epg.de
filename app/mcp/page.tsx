@@ -171,6 +171,50 @@ export default function MCPInterfacePage() {
   "id": 1,
   "method": "ping"
 }`,
+      'get_available_countries': `{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "get_available_countries",
+    "arguments": {}
+  }
+}`,
+      'get_channels': `{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "get_channels",
+    "arguments": {
+      "country": "DE"
+    }
+  }
+}`,
+      'get_current_programmes': `{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "get_current_programmes",
+    "arguments": {
+      "country": "DE"
+    }
+  }
+}`,
+      'search_programmes': `{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "search_programmes",
+    "arguments": {
+      "country": "DE",
+      "query": "Nachrichten",
+      "limit": 10
+    }
+  }
+}`,
     };
 
     if (examples[method]) {
@@ -237,19 +281,39 @@ export default function MCPInterfacePage() {
             </h2>
 
             {/* Quick Examples */}
-            <div className="mb-4 flex flex-wrap gap-2">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Examples:</span>
-              {['initialize', 'tools/list', 'tools/call', 'resources/list', 'ping'].map(
-                (method) => (
-                  <button
-                    key={method}
-                    onClick={() => insertExampleRequest(method)}
-                    className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-                  >
-                    {method}
-                  </button>
-                )
-              )}
+            <div className="mb-4">
+              <div className="mb-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Basic Examples:</span>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {['initialize', 'tools/list', 'tools/call', 'resources/list', 'ping'].map(
+                  (method) => (
+                    <button
+                      key={method}
+                      onClick={() => insertExampleRequest(method)}
+                      className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                    >
+                      {method}
+                    </button>
+                  )
+                )}
+              </div>
+              <div className="mb-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">TV Programme Examples:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {['get_available_countries', 'get_channels', 'get_current_programmes', 'search_programmes'].map(
+                  (method) => (
+                    <button
+                      key={method}
+                      onClick={() => insertExampleRequest(method)}
+                      className="px-3 py-1 text-sm bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors"
+                    >
+                      {method}
+                    </button>
+                  )
+                )}
+              </div>
             </div>
 
             <textarea
