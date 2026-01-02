@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server';
-import { getCacheInfo } from '@/lib/epg-service';
+import { getCacheInfo, getAvailableCountries, getCountryConfig } from '@/lib/epg-service';
 
 /**
  * API Route für Cache-Status Informationen
- * GET /api/epg/status
+ * GET /api/epg/status?country=DE
  * 
  * Gibt Informationen über den aktuellen Cache-Status zurück.
+ * 
+ * Query Parameter:
+ * - country: Länder-Code (z.B. DE, US, GB, etc.) - Standard: DE
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const cacheInfo = getCacheInfo();
+    const { searchParams } = new URL(request.url);
+    const countryCode = searchParams.get('country') || 'DE';
+    
+    const cacheInfo = getCacheInfo(countryCode);
+    const config = getCountryConfig(countryCode);
     const revalidateSeconds = parseInt(
       process.env.EPG_REVALIDATE_SECONDS || '86400',
       10
@@ -17,44 +24,33 @@ export async function GET() {
 
     return NextResponse.json(
       {
+        country: {
+          code: config.code,
+          name: config.name,
+        },
         cache: {
           active: cacheInfo.cached,
           age: cacheInfo.age,
           ageFormatted: cacheInfo.ageFormatted,
           revalidateSeconds,
         },
-        sources: [
-          {
-            name: 'GlobeTV Germany EPG',
-            url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Germany/germany1.xml',
-            type: 'xml',
-            priority: 'primary',
-          },
-          {
-            name: 'EPGShare DE1',
-            url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
-            type: 'xml.gz',
-            priority: 'primary',
-          },
-        ],
-        fallbackSources: [
-          {
-            name: 'EPGShare DE1 (Fallback)',
-            url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
-            type: 'xml.gz',
-            priority: 'fallback',
-          },
-          {
-            name: 'EPGShare DE1 XML (Fallback)',
-            url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml',
-            type: 'xml',
-            priority: 'fallback',
-          },
-        ],
+        sources: config.sources.map((source) => ({
+          name: `${config.name} EPG Source`,
+          url: source.url,
+          type: source.compressed ? 'xml.gz' : 'xml',
+          priority: 'primary',
+        })),
+        fallbackSources: config.fallbackSources.map((source) => ({
+          name: `${config.name} EPG Fallback`,
+          url: source.url,
+          type: source.compressed ? 'xml.gz' : 'xml',
+          priority: 'fallback',
+        })),
+        availableCountries: getAvailableCountries(),
         endpoints: {
-          epg: '/api/epg',
-          status: '/api/epg/status',
-          refresh: '/api/epg/refresh',
+          epg: `/api/epg?country=${countryCode}`,
+          status: `/api/epg/status?country=${countryCode}`,
+          refresh: `/api/epg/refresh?country=${countryCode}`,
         },
       },
       { status: 200 }

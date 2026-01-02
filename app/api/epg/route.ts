@@ -1,17 +1,23 @@
 import { NextResponse } from 'next/server';
-import { getEpgData } from '@/lib/epg-service';
+import { getEpgData, getAvailableCountries } from '@/lib/epg-service';
 import { incrementDownloads } from '@/lib/stats-service';
 
 /**
  * API Route Handler für EPG XML
- * GET /api/epg
+ * GET /api/epg?country=DE
  * 
  * Liefert die EPG Daten als XML aus.
  * Die Daten werden täglich automatisch aktualisiert.
+ * 
+ * Query Parameter:
+ * - country: Länder-Code (z.B. DE, US, GB, FR, etc.) - Standard: DE
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const xmlData = await getEpgData();
+    const { searchParams } = new URL(request.url);
+    const countryCode = searchParams.get('country') || 'DE';
+    
+    const xmlData = await getEpgData(countryCode);
     
     // Download-Counter inkrementieren
     incrementDownloads();

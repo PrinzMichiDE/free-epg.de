@@ -23,8 +23,8 @@ interface Feature {
 const features: Feature[] = [
   {
     icon: GlobeAltIcon,
-    title: 'Deutsche TV-Sender',
-    description: 'Vollständige Programmübersicht für alle wichtigen deutschen Fernsehsender',
+    title: 'Weltweite Abdeckung',
+    description: 'EPG-Daten für über 13 Länder: Deutschland, USA, UK, Frankreich, Italien, Spanien und mehr',
     color: 'text-blue-400',
     gradient: 'from-blue-500/10 to-blue-600/5',
   },
@@ -38,7 +38,7 @@ const features: Feature[] = [
   {
     icon: BoltIcon,
     title: 'Sofort einsatzbereit',
-    description: 'Einfach URL kopieren und in deiner IPTV-App einfügen - fertig',
+    description: 'Einfach Land auswählen, URL kopieren und in deiner IPTV-App einfügen - fertig',
     color: 'text-yellow-400',
     gradient: 'from-yellow-500/10 to-yellow-600/5',
   },

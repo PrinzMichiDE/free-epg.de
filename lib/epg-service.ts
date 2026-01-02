@@ -38,32 +38,196 @@ interface XmlTvRoot {
   };
 }
 
-// EPG Quellen Konfiguration (Primäre Quellen)
-const EPG_SOURCES = [
-  {
-    url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Germany/germany1.xml',
-    compressed: false,
-  },
-  {
-    url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
-    compressed: true,
-  },
-];
+// Länder-Konfiguration mit EPG-Quellen
+interface CountryConfig {
+  code: string;
+  name: string;
+  sources: Array<{ url: string; compressed: boolean }>;
+  fallbackSources: Array<{ url: string; compressed: boolean }>;
+}
 
-// Fallback Quellen (werden verwendet, wenn primäre Quellen fehlschlagen)
-const EPG_FALLBACK_SOURCES = [
-  {
-    url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
-    compressed: true,
+const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
+  DE: {
+    code: 'DE',
+    name: 'Deutschland',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Germany/germany1.xml',
+        compressed: false,
+      },
+      {
+        url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
+        compressed: true,
+      },
+    ],
+    fallbackSources: [
+      {
+        url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
+        compressed: true,
+      },
+      {
+        url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml',
+        compressed: false,
+      },
+    ],
   },
-  {
-    url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml',
-    compressed: false,
+  US: {
+    code: 'US',
+    name: 'United States',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/USA/usa1.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
   },
-];
+  GB: {
+    code: 'GB',
+    name: 'United Kingdom',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/UK/uk1.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  FR: {
+    code: 'FR',
+    name: 'France',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/France/france1.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  IT: {
+    code: 'IT',
+    name: 'Italy',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Italy/italy1.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  ES: {
+    code: 'ES',
+    name: 'Spain',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Spain/spain1.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  NL: {
+    code: 'NL',
+    name: 'Netherlands',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Netherlands/netherlands1.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  PL: {
+    code: 'PL',
+    name: 'Poland',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Poland/poland1.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  AT: {
+    code: 'AT',
+    name: 'Austria',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Austria/austria1.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  CH: {
+    code: 'CH',
+    name: 'Switzerland',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Switzerland/switzerland1.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  BE: {
+    code: 'BE',
+    name: 'Belgium',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Belgium/belgium1.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  CA: {
+    code: 'CA',
+    name: 'Canada',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Canada/canada1.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+  AU: {
+    code: 'AU',
+    name: 'Australia',
+    sources: [
+      {
+        url: 'https://raw.githubusercontent.com/globetvapp/epg/refs/heads/main/Australia/australia1.xml',
+        compressed: false,
+      },
+    ],
+    fallbackSources: [],
+  },
+};
 
-// In-Memory Cache für die EPG Daten
-let epgCache: EpgCache | null = null;
+// Standard-Land (Deutschland)
+const DEFAULT_COUNTRY = 'DE';
+
+/**
+ * Gibt alle verfügbaren Länder zurück
+ */
+export function getAvailableCountries(): Array<{ code: string; name: string }> {
+  return Object.values(COUNTRY_CONFIGS).map((config) => ({
+    code: config.code,
+    name: config.name,
+  }));
+}
+
+/**
+ * Gibt die Konfiguration für ein Land zurück
+ */
+export function getCountryConfig(countryCode: string): CountryConfig {
+  const code = countryCode.toUpperCase();
+  return COUNTRY_CONFIGS[code] || COUNTRY_CONFIGS[DEFAULT_COUNTRY];
+}
+
+// In-Memory Cache für die EPG Daten (pro Land)
+const epgCache: Map<string, EpgCache> = new Map();
 
 // XML Parser Konfiguration
 const parserOptions = {
@@ -198,15 +362,17 @@ function mergeEpgData(xmlDataArray: string[]): string {
 }
 
 /**
- * Lädt alle EPG Quellen und merged sie
+ * Lädt alle EPG Quellen für ein bestimmtes Land und merged sie
  * Verwendet Fallback-Quellen, wenn primäre Quellen fehlschlagen
  */
-export async function loadEpgData(): Promise<string> {
+export async function loadEpgData(countryCode: string = DEFAULT_COUNTRY): Promise<string> {
+  const config = getCountryConfig(countryCode);
   const startTime = Date.now();
-  console.log(`[EPG] Lade ${EPG_SOURCES.length} primäre EPG Quellen...`);
+  console.log(`[EPG] Lade EPG Daten für ${config.name} (${config.code})...`);
+  console.log(`[EPG] ${config.sources.length} primäre Quellen verfügbar`);
 
   // Versuche primäre Quellen zu laden
-  const loadPromises = EPG_SOURCES.map((source) =>
+  const loadPromises = config.sources.map((source) =>
     loadSingleSource(source.url, source.compressed)
   );
 
@@ -217,7 +383,7 @@ export async function loadEpgData(): Promise<string> {
   
   // Wenn mindestens eine primäre Quelle erfolgreich war, merge die Daten
   if (successfulData.length > 0) {
-    console.log(`[EPG] ${successfulData.length}/${EPG_SOURCES.length} primäre Quellen erfolgreich geladen`);
+    console.log(`[EPG] ${successfulData.length}/${config.sources.length} primäre Quellen erfolgreich geladen`);
     
     try {
       const mergedXml = mergeEpgData(successfulData);
@@ -233,9 +399,13 @@ export async function loadEpgData(): Promise<string> {
   }
 
   // Alle primären Quellen fehlgeschlagen - verwende Fallback
+  if (config.fallbackSources.length === 0) {
+    throw new Error(`Keine EPG Daten für ${config.name} verfügbar`);
+  }
+
   console.log('[EPG] Alle primären Quellen fehlgeschlagen, verwende Fallback-Quellen...');
   
-  const fallbackPromises = EPG_FALLBACK_SOURCES.map((source) =>
+  const fallbackPromises = config.fallbackSources.map((source) =>
     loadSingleSource(source.url, source.compressed)
   );
 
@@ -243,10 +413,10 @@ export async function loadEpgData(): Promise<string> {
   const fallbackData = fallbackResults.filter((data): data is string => data !== null);
 
   if (fallbackData.length === 0) {
-    throw new Error('Alle EPG Quellen (primär und Fallback) sind fehlgeschlagen');
+    throw new Error(`Alle EPG Quellen (primär und Fallback) für ${config.name} sind fehlgeschlagen`);
   }
 
-  console.log(`[EPG] ${fallbackData.length}/${EPG_FALLBACK_SOURCES.length} Fallback-Quellen erfolgreich geladen`);
+  console.log(`[EPG] ${fallbackData.length}/${config.fallbackSources.length} Fallback-Quellen erfolgreich geladen`);
   
   const mergedXml = mergeEpgData(fallbackData);
   const duration = ((Date.now() - startTime) / 1000).toFixed(2);
@@ -261,29 +431,31 @@ export async function loadEpgData(): Promise<string> {
  * Gibt die gecachten EPG Daten zurück oder lädt sie neu,
  * wenn der Cache abgelaufen ist.
  */
-export async function getEpgData(): Promise<string> {
+export async function getEpgData(countryCode: string = DEFAULT_COUNTRY): Promise<string> {
   const revalidateSeconds = parseInt(
     process.env.EPG_REVALIDATE_SECONDS || '86400',
     10
   );
 
   const now = Date.now();
+  const cacheKey = countryCode.toUpperCase();
+  const cached = epgCache.get(cacheKey);
 
   // Prüfe ob Cache vorhanden und noch gültig ist
-  if (epgCache && now - epgCache.timestamp < revalidateSeconds * 1000) {
-    console.log('[EPG] Cache-Hit');
-    return epgCache.data;
+  if (cached && now - cached.timestamp < revalidateSeconds * 1000) {
+    console.log(`[EPG] Cache-Hit für ${cacheKey}`);
+    return cached.data;
   }
 
   // Cache ist abgelaufen oder nicht vorhanden - neu laden
-  console.log('[EPG] Cache-Miss - lade Daten neu');
-  const data = await loadEpgData();
+  console.log(`[EPG] Cache-Miss für ${cacheKey} - lade Daten neu`);
+  const data = await loadEpgData(countryCode);
 
   // Cache aktualisieren
-  epgCache = {
+  epgCache.set(cacheKey, {
     data,
     timestamp: now,
-  };
+  });
 
   return data;
 }
@@ -291,20 +463,28 @@ export async function getEpgData(): Promise<string> {
 /**
  * Setzt den Cache zurück (nützlich für manuelle Updates)
  */
-export function resetEpgCache(): void {
-  epgCache = null;
-  console.log('[EPG] Cache zurückgesetzt');
+export function resetEpgCache(countryCode?: string): void {
+  if (countryCode) {
+    epgCache.delete(countryCode.toUpperCase());
+    console.log(`[EPG] Cache für ${countryCode} zurückgesetzt`);
+  } else {
+    epgCache.clear();
+    console.log('[EPG] Alle Caches zurückgesetzt');
+  }
 }
 
 /**
  * Gibt Informationen über den Cache-Status zurück
  */
-export function getCacheInfo(): {
+export function getCacheInfo(countryCode: string = DEFAULT_COUNTRY): {
   cached: boolean;
   age: number | null;
   ageFormatted: string | null;
 } {
-  if (!epgCache) {
+  const cacheKey = countryCode.toUpperCase();
+  const cached = epgCache.get(cacheKey);
+
+  if (!cached) {
     return {
       cached: false,
       age: null,
@@ -312,7 +492,7 @@ export function getCacheInfo(): {
     };
   }
 
-  const age = Date.now() - epgCache.timestamp;
+  const age = Date.now() - cached.timestamp;
   const ageMinutes = Math.floor(age / 1000 / 60);
   const ageHours = Math.floor(ageMinutes / 60);
 

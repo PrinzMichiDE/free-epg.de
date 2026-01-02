@@ -93,7 +93,7 @@ export default function HomePage() {
             transition={{ delay: 0.3, duration: 0.5 }}
             className="text-base md:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed"
           >
-            Einfach die URL kopieren, in deine IPTV-App einfügen und sofort alle deutschen TV-Sender mit Programmübersicht nutzen.
+            Wähle dein Land aus, kopiere die URL und füge sie in deine IPTV-App ein. Sofort verfügbar für über 13 Länder weltweit.
           </motion.p>
         </div>
 

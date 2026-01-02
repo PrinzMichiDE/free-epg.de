@@ -9,17 +9,19 @@ import {
   LinkIcon,
   QrCodeIcon
 } from '@heroicons/react/24/outline';
+import { CountrySelector } from './country-selector';
 
 export function IptvLinkCard() {
   const [copied, setCopied] = useState(false);
   const [epgUrl, setEpgUrl] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('DE');
 
   useEffect(() => {
-    // URL dynamisch erstellen (client-side)
+    // URL dynamisch erstellen (client-side) mit Länder-Parameter
     if (typeof window !== 'undefined') {
-      setEpgUrl(`${window.location.origin}/api/epg`);
+      setEpgUrl(`${window.location.origin}/api/epg?country=${selectedCountry}`);
     }
-  }, []);
+  }, [selectedCountry]);
 
   const copyToClipboard = async () => {
     try {
@@ -70,6 +72,17 @@ export function IptvLinkCard() {
           >
             <LinkIcon className="w-6 h-6 text-emerald-400" />
           </motion.div>
+        </div>
+
+        {/* Country Selector */}
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-white mb-3">
+            Land auswählen
+          </label>
+          <CountrySelector
+            selectedCountry={selectedCountry}
+            onCountryChange={setSelectedCountry}
+          />
         </div>
 
         {/* URL Display */}
