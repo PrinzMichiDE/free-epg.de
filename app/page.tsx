@@ -19,7 +19,9 @@ import { EpgPreviewCard } from '@/components/epg-preview';
 import { FaqSection } from '@/components/faq-section';
 import { PerformanceMetrics } from '@/components/performance-metrics';
 import { AdSenseBanner } from '@/components/adsense-banner';
-import { SignalIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { KoFiSupport } from '@/components/kofi-support';
+import { KoFiFloatingButton } from '@/components/kofi-floating-button';
+import { SignalIcon, SparklesIcon, CoffeeIcon } from '@heroicons/react/24/outline';
 
 export default function HomePage() {
   const isPWA = usePWAMode();
@@ -37,6 +39,9 @@ export default function HomePage() {
       
       {/* PWA Install Prompt */}
       <PwaInstallPrompt />
+      
+      {/* Ko-Fi Floating Button */}
+      <KoFiFloatingButton />
       
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -85,6 +90,11 @@ export default function HomePage() {
           </motion.p>
         </div>
 
+        {/* Ko-Fi Support Hero Section - Very Prominent */}
+        <div className="mb-12">
+          <KoFiSupport variant="hero" />
+        </div>
+
         {/* AdSense Banner - Top */}
         <div className="mb-8">
           <AdSenseBanner 
@@ -112,6 +122,11 @@ export default function HomePage() {
         {/* EPG Preview */}
         <div className="mb-10">
           <EpgPreviewCard />
+        </div>
+
+        {/* Ko-Fi Support Card - Additional Prominent Placement */}
+        <div className="mb-10">
+          <KoFiSupport variant="card" />
         </div>
 
         {/* Performance Metrics */}
@@ -172,10 +187,23 @@ export default function HomePage() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-16 pt-8 border-t border-white/10 text-center text-slate-400 text-sm">
-          <p className="font-medium">
-            Erstellt mit Next.js, TypeScript und Headless UI • Open Source
-          </p>
+        <footer className="mt-16 pt-8 border-t border-white/10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+            <p className="text-slate-400 text-sm font-medium">
+              Erstellt mit Next.js, TypeScript und Headless UI • Open Source
+            </p>
+            <motion.a
+              href="https://ko-fi.com/michelfritzsch"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#FF5E5B] to-[#FF6B68] text-white font-semibold rounded-lg hover:from-[#FF6B68] hover:to-[#FF7875] transition-all shadow-lg shadow-[#FF5E5B]/50 text-sm"
+            >
+              <CoffeeIcon className="w-4 h-4 mr-2" />
+              Projekt unterstützen
+            </motion.a>
+          </div>
         </footer>
       </div>
     </main>
