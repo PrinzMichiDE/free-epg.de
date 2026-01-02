@@ -17,10 +17,16 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const countryCode = searchParams.get('country') || 'DE';
     
+    // User-Agent und IP für Statistiken extrahieren
+    const userAgent = request.headers.get('user-agent');
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const realIP = request.headers.get('x-real-ip');
+    const ip = forwardedFor?.split(',')[0] || realIP || null;
+    
     const xmlData = await getEpgData(countryCode);
     
-    // Download-Counter inkrementieren
-    incrementDownloads();
+    // Download-Counter inkrementieren mit Player-Erkennung
+    incrementDownloads(userAgent, ip);
     
     // XML mit korrektem Content-Type zurückgeben
     return new NextResponse(xmlData, {

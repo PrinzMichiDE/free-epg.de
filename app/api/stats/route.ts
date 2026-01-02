@@ -1,15 +1,24 @@
 import { NextResponse } from 'next/server';
-import { getStats } from '@/lib/stats-service';
+import { getStats, getDailyUsage, getPlayerStats } from '@/lib/stats-service';
 
 /**
  * API Route für Statistiken
  * GET /api/stats
  * 
  * Gibt die aktuellen Besucher- und Download-Statistiken zurück.
+ * Inkludiert tägliche Nutzung und Player-Statistiken.
  */
 export async function GET() {
   try {
     const stats = getStats();
+    const dailyUsage = getDailyUsage();
+    const playerStats = getPlayerStats();
+    
+    // Top 10 Player sortieren
+    const topPlayers = Object.entries(playerStats)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([name, count]) => ({ name, count }));
     
     return NextResponse.json(
       {
@@ -18,6 +27,9 @@ export async function GET() {
           visitors: stats.visitors,
           downloads: stats.downloads,
           lastReset: stats.lastReset,
+          dailyUsage,
+          topPlayers,
+          totalPlayers: Object.keys(playerStats).length,
         },
       },
       { status: 200 }

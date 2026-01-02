@@ -38,6 +38,11 @@ export const translations = {
     // Stats
     visitors: 'Besucher',
     downloads: 'Downloads',
+    dailyUsage: 'Tägliche Nutzung',
+    dailyUsageDesc: 'Downloads der letzten 7 Tage',
+    today: 'Heute',
+    playerStats: 'Verwendete Player',
+    playerStatsDesc: 'Top 5 IPTV-Apps und Player',
     
     // Support
     supportTitle: 'Unterstütze das Projekt',
@@ -96,6 +101,11 @@ export const translations = {
     
     visitors: 'Visitors',
     downloads: 'Downloads',
+    dailyUsage: 'Daily Usage',
+    dailyUsageDesc: 'Downloads from the last 7 days',
+    today: 'Today',
+    playerStats: 'Used Players',
+    playerStatsDesc: 'Top 5 IPTV apps and players',
     
     supportTitle: 'Support the project',
     supportSubtitle: 'Do you like this free EPG service? Support continuous development and improvement with a donation via Ko-Fi.',
@@ -151,6 +161,11 @@ export const translations = {
     
     visitors: 'Visiteurs',
     downloads: 'Téléchargements',
+    dailyUsage: 'Utilisation quotidienne',
+    dailyUsageDesc: 'Téléchargements des 7 derniers jours',
+    today: "Aujourd'hui",
+    playerStats: 'Lecteurs utilisés',
+    playerStatsDesc: 'Top 5 applications IPTV et lecteurs',
     
     supportTitle: 'Soutenez le projet',
     supportSubtitle: 'Vous aimez ce service EPG gratuit? Soutenez le développement continu et l\'amélioration avec un don via Ko-Fi.',
@@ -206,6 +221,11 @@ export const translations = {
     
     visitors: 'Visitantes',
     downloads: 'Descargas',
+    dailyUsage: 'Uso diario',
+    dailyUsageDesc: 'Descargas de los últimos 7 días',
+    today: 'Hoy',
+    playerStats: 'Reproductores utilizados',
+    playerStatsDesc: 'Top 5 aplicaciones IPTV y reproductores',
     
     supportTitle: 'Apoya el proyecto',
     supportSubtitle: '¿Te gusta este servicio EPG gratuito? Apoya el desarrollo continuo y la mejora con una donación a través de Ko-Fi.',
