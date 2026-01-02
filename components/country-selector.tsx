@@ -19,13 +19,32 @@ export function CountrySelector({ selectedCountry, onCountryChange }: CountrySel
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+    
     // Länder von der API laden
     const loadCountries = async () => {
       try {
-        const response = await fetch('/api/epg/status?country=DE');
+        const response = await fetch('/api/epg/status?country=DE', {
+          cache: 'no-store',
+        });
+        
+        if (!mounted) return;
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
         const data = await response.json();
-        setCountries(data.availableCountries || []);
+        
+        if (!mounted) return;
+        
+        if (data.availableCountries && Array.isArray(data.availableCountries)) {
+          setCountries(data.availableCountries);
+        } else {
+          throw new Error('Invalid data format');
+        }
       } catch (error) {
+        if (!mounted) return;
         console.error('Fehler beim Laden der Länder:', error);
         // Fallback: Standard-Länder
         setCountries([
@@ -47,6 +66,10 @@ export function CountrySelector({ selectedCountry, onCountryChange }: CountrySel
     };
 
     loadCountries();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const selectedCountryName = countries.find(c => c.code === selectedCountry)?.name || selectedCountry;

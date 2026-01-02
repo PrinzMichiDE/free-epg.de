@@ -8,7 +8,6 @@ import {
   FilmIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
-import { useTranslations } from '@/hooks/use-translations';
 import { CountrySelector } from './country-selector';
 
 interface Programme {
@@ -38,7 +37,6 @@ interface EpgPreviewData {
 }
 
 export function EpgProgramPreview() {
-  const { t, locale } = useTranslations();
   const [data, setData] = useState<EpgPreviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,11 +44,19 @@ export function EpgProgramPreview() {
   const [expandedChannel, setExpandedChannel] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+    
     const loadPreview = async () => {
       try {
+        if (!mounted) return;
         setLoading(true);
         setError(null);
-        const response = await fetch(`/api/epg/preview?country=${selectedCountry}&limit=5`);
+        
+        const response = await fetch(`/api/epg/preview?country=${selectedCountry}&limit=5`, {
+          cache: 'no-store',
+        });
+        
+        if (!mounted) return;
         
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -58,22 +64,35 @@ export function EpgProgramPreview() {
         
         const result = await response.json();
         
+        if (!mounted) return;
+        
         if (result.success) {
           setData(result);
         } else {
           setError(result.message || 'Fehler beim Laden der Daten');
         }
       } catch (error) {
+        if (!mounted) return;
         console.error('Fehler beim Laden der EPG-Preview:', error);
         setError(error instanceof Error ? error.message : 'Unbekannter Fehler');
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadPreview();
-    const interval = setInterval(loadPreview, 60000); // Refresh alle Minute
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      if (mounted) {
+        loadPreview();
+      }
+    }, 60000); // Refresh alle Minute
+    
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, [selectedCountry]);
 
   if (loading && !data) {
@@ -111,10 +130,17 @@ export function EpgProgramPreview() {
                 setLoading(true);
                 const loadPreview = async () => {
                   try {
-                    const response = await fetch(`/api/epg/preview?country=${selectedCountry}&limit=5`);
+                    const response = await fetch(`/api/epg/preview?country=${selectedCountry}&limit=5`, {
+                      cache: 'no-store',
+                    });
+                    if (!response.ok) {
+                      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
                     const result = await response.json();
                     if (result.success) {
                       setData(result);
+                    } else {
+                      setError(result.message || 'Fehler beim Laden der Daten');
                     }
                   } catch (err) {
                     setError(err instanceof Error ? err.message : 'Unbekannter Fehler');
@@ -134,7 +160,25 @@ export function EpgProgramPreview() {
     );
   }
 
-  if (!data || !data.success) {
+  if (!data) {
+    if (loading) {
+      return (
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+          <div className="animate-pulse space-y-6">
+            <div className="h-7 bg-white/10 rounded-lg w-1/3"></div>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-32 bg-white/10 rounded-xl"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  }
+
+  if (!data.success) {
     return null;
   }
 
@@ -171,7 +215,12 @@ export function EpgProgramPreview() {
 
       {/* Channels List */}
       <div className="space-y-3 max-h-[600px] overflow-y-auto">
-        {data.channels.slice(0, 10).map((channel, idx) => (
+        {(!data.channels || data.channels.length === 0) ? (
+          <div className="text-center py-8">
+            <p className="text-slate-400">Keine Programme verfügbar</p>
+          </div>
+        ) : (
+          data.channels.slice(0, 10).map((channel, idx) => (
           <motion.div
             key={channel.id}
             initial={{ opacity: 0, y: 10 }}
@@ -244,7 +293,8 @@ export function EpgProgramPreview() {
               </div>
             )}
           </motion.div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Footer Info */}
