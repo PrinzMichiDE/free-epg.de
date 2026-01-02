@@ -213,9 +213,11 @@ async function saveStats(stats: Stats): Promise<void> {
         return;
       }
       
-      // Verwende Vercel API für Writes (laut Dokumentation)
+      // Verwende Vercel API für Writes
       // API Endpoint: PATCH /v1/edge-config/{id}/items
-      const apiUrl = `https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`;
+      // Store-ID sollte ohne Präfix verwendet werden (nur der Teil nach ecfg_)
+      const storeIdForApi = edgeConfigStoreId.replace(/^ecfg_/, '');
+      const apiUrl = `https://api.vercel.com/v1/edge-config/${storeIdForApi}/items`;
       
       const response = await fetch(apiUrl, {
         method: 'PATCH',
@@ -226,7 +228,7 @@ async function saveStats(stats: Stats): Promise<void> {
         body: JSON.stringify({
           items: [
             {
-              operation: 'upsert', // Verwende 'upsert' statt 'update' für bessere Kompatibilität
+              operation: 'upsert',
               key: EDGE_STATS_KEY,
               value: JSON.stringify(stats),
             },
@@ -304,7 +306,8 @@ async function saveDailyUsage(usage: Map<string, DailyUsage>): Promise<void> {
         usageObj[key] = value;
       });
       
-      const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`, {
+      const storeIdForApi = edgeConfigStoreId.replace(/^ecfg_/, '');
+      const response = await fetch(`https://api.vercel.com/v1/edge-config/${storeIdForApi}/items`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${edgeConfigToken}`,
@@ -380,7 +383,8 @@ async function savePlayerStats(stats: PlayerStats): Promise<void> {
       
       if (!edgeConfigStoreId) return;
       
-      const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`, {
+      const storeIdForApi = edgeConfigStoreId.replace(/^ecfg_/, '');
+      const response = await fetch(`https://api.vercel.com/v1/edge-config/${storeIdForApi}/items`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${edgeConfigToken}`,
