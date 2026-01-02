@@ -56,8 +56,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/de.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-DE.xml.gz',
+        compressed: true,
       },
       {
         url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz',
@@ -70,8 +70,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: true,
       },
       {
-        url: 'https://epghub.xyz/epg/de.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-DE.xml.gz',
+        compressed: true,
       },
       {
         url: 'https://epgshare01.online/epgshare01/epg_ripper_DE1.xml',
@@ -88,14 +88,14 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/us.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-US.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [
       {
-        url: 'https://epghub.xyz/epg/us.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-US.xml.gz',
+        compressed: true,
       },
     ],
   },
@@ -108,14 +108,14 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/gb.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-GB.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [
       {
-        url: 'https://epghub.xyz/epg/gb.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-GB.xml.gz',
+        compressed: true,
       },
     ],
   },
@@ -128,14 +128,14 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/fr.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-FR.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [
       {
-        url: 'https://epghub.xyz/epg/fr.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-FR.xml.gz',
+        compressed: true,
       },
     ],
   },
@@ -148,14 +148,14 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/it.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-IT.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [
       {
-        url: 'https://epghub.xyz/epg/it.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-IT.xml.gz',
+        compressed: true,
       },
     ],
   },
@@ -168,14 +168,14 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/es.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-ES.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [
       {
-        url: 'https://epghub.xyz/epg/es.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-ES.xml.gz',
+        compressed: true,
       },
     ],
   },
@@ -188,14 +188,14 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/nl.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-NL.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [
       {
-        url: 'https://epghub.xyz/epg/nl.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-NL.xml.gz',
+        compressed: true,
       },
     ],
   },
@@ -208,14 +208,14 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/pl.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-PL.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [
       {
-        url: 'https://epghub.xyz/epg/pl.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-PL.xml.gz',
+        compressed: true,
       },
     ],
   },
@@ -228,14 +228,14 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/at.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-AT.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [
       {
-        url: 'https://epghub.xyz/epg/at.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-AT.xml.gz',
+        compressed: true,
       },
     ],
   },
@@ -248,14 +248,14 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/ch.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-CH.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [
       {
-        url: 'https://epghub.xyz/epg/ch.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-CH.xml.gz',
+        compressed: true,
       },
     ],
   },
@@ -268,14 +268,14 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/be.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-BE.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [
       {
-        url: 'https://epghub.xyz/epg/be.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-BE.xml.gz',
+        compressed: true,
       },
     ],
   },
@@ -288,14 +288,14 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/ca.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-CA.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [
       {
-        url: 'https://epghub.xyz/epg/ca.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-CA.xml.gz',
+        compressed: true,
       },
     ],
   },
@@ -308,14 +308,14 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
         compressed: false,
       },
       {
-        url: 'https://epghub.xyz/epg/au.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-AU.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [
       {
-        url: 'https://epghub.xyz/epg/au.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-AU.xml.gz',
+        compressed: true,
       },
     ],
   },
@@ -325,8 +325,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Portugal',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/pt.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-PT.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -336,8 +336,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Greece',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/gr.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-GR.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -347,8 +347,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Turkey',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/tr.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-TR.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -358,8 +358,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Romania',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/ro.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-RO.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -369,8 +369,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Czech Republic',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/cz.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-CZ.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -380,8 +380,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Sweden',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/se.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-SE.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -391,8 +391,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Norway',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/no.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-NO.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -402,8 +402,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Denmark',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/dk.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-DK.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -413,8 +413,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Finland',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/fi.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-FI.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -424,8 +424,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Ireland',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/ie.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-IE.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -435,8 +435,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Brazil',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/br.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-BR.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -446,8 +446,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Mexico',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/mx.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-MX.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -457,8 +457,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Argentina',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/ar.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-AR.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -468,8 +468,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Chile',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/cl.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-CL.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -479,8 +479,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Colombia',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/co.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-CO.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -490,8 +490,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'India',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/in.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-IN.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -501,8 +501,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Japan',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/jp.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-JP.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -512,8 +512,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'South Korea',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/kr.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-KR.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -523,8 +523,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'China',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/cn.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-CN.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -534,8 +534,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Russia',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/ru.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-RU.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -545,8 +545,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Ukraine',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/ua.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-UA.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -556,8 +556,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'Saudi Arabia',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/sa.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-SA.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -567,8 +567,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'United Arab Emirates',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/ae.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-AE.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -578,8 +578,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'South Africa',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/za.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-ZA.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
@@ -589,8 +589,8 @@ const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
     name: 'New Zealand',
     sources: [
       {
-        url: 'https://epghub.xyz/epg/nz.xml',
-        compressed: false,
+        url: 'https://epghub.xyz/epg/EPG-NZ.xml.gz',
+        compressed: true,
       },
     ],
     fallbackSources: [],
