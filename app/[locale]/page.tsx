@@ -5,7 +5,6 @@ import { StatsCard } from '@/components/stats-card';
 import { EpgAutoUpdater } from '@/components/epg-auto-updater';
 import { IptvLinkCard } from '@/components/iptv-link-card';
 import { FeaturesGrid } from '@/components/features-grid';
-import { TvPlayerUltra } from '@/components/tv-player-ultra';
 import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 import { PwaTvPlayerEnhanced } from '@/components/pwa-tv-player-enhanced';
 import { usePWAMode } from '@/components/pwa-detector';
@@ -168,9 +167,41 @@ export default function HomePage() {
           <FeaturesGrid />
         </div>
 
-        {/* Live TV Player */}
+        {/* Live TV Player Link */}
         <div className="mb-16">
-          <TvPlayerUltra />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl hover:border-emerald-500/30 transition-all duration-300"
+          >
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-4">
+                <div className="p-4 bg-gradient-to-br from-emerald-500/20 to-blue-600/20 border border-emerald-500/30 rounded-xl shadow-lg">
+                  <SignalIcon className="w-12 h-12 text-white" />
+                </div>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                {t('liveTvTitle')}
+              </h2>
+              <p className="text-slate-400 text-lg mb-6 max-w-2xl mx-auto">
+                {t('liveTvDescription')}
+              </p>
+              <motion.a
+                href="https://www.michelfritzsch.de/tv"
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-500 to-blue-600 text-white font-bold rounded-xl hover:from-emerald-600 hover:to-blue-700 transition-all shadow-xl shadow-emerald-500/50 text-lg"
+              >
+                <SparklesIcon className="w-6 h-6 mr-2" />
+                {t('liveTvButton')}
+                <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </motion.a>
+            </div>
+          </motion.div>
         </div>
 
         {/* Stats - Simple */}

@@ -57,6 +57,11 @@ export const translations = {
     // Footer
     footerText: 'Kostenloser Service • Keine Registrierung erforderlich • Open Source',
     supportProject: 'Projekt unterstützen',
+    
+    // Live TV
+    liveTvTitle: 'Live TV Player',
+    liveTvDescription: 'Nutze unseren Live TV Player für direktes Streaming deutscher Sender. Keine App erforderlich - einfach im Browser öffnen.',
+    liveTvButton: 'Zum Live TV Player',
   },
   en: {
     title: 'Free TV Program Guide',
@@ -107,6 +112,11 @@ export const translations = {
     
     footerText: 'Free service • No registration required • Open Source',
     supportProject: 'Support project',
+    
+    // Live TV
+    liveTvTitle: 'Live TV Player',
+    liveTvDescription: 'Use our Live TV Player for direct streaming of German channels. No app required - simply open in your browser.',
+    liveTvButton: 'Go to Live TV Player',
   },
   fr: {
     title: 'Guide de programmes TV gratuit',
@@ -157,6 +167,11 @@ export const translations = {
     
     footerText: 'Service gratuit • Aucune inscription requise • Open Source',
     supportProject: 'Soutenir le projet',
+    
+    // Live TV
+    liveTvTitle: 'Lecteur TV en direct',
+    liveTvDescription: 'Utilisez notre lecteur TV en direct pour diffuser directement les chaînes allemandes. Aucune application requise - ouvrez simplement dans votre navigateur.',
+    liveTvButton: 'Aller au lecteur TV en direct',
   },
   es: {
     title: 'Guía de programas de TV gratuita',
@@ -207,6 +222,11 @@ export const translations = {
     
     footerText: 'Servicio gratuito • No se requiere registro • Open Source',
     supportProject: 'Apoyar proyecto',
+    
+    // Live TV
+    liveTvTitle: 'Reproductor de TV en vivo',
+    liveTvDescription: 'Utiliza nuestro reproductor de TV en vivo para transmitir directamente canales alemanes. No se requiere aplicación - simplemente abre en tu navegador.',
+    liveTvButton: 'Ir al reproductor de TV en vivo',
   },
 } as const;
 
