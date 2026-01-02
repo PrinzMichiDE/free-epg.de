@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getEpgData } from '@/lib/epg-service';
 import { XMLParser } from 'fast-xml-parser';
-import { trackEpgPreview, trackApiError } from '@/lib/analytics';
 
 /**
  * API Route für EPG Preview Daten

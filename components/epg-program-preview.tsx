@@ -9,7 +9,6 @@ import {
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import { CountrySelector } from './country-selector';
-import { trackEpgPreview } from '@/lib/analytics';
 
 interface Programme {
   title: string;
@@ -64,13 +63,6 @@ export function EpgProgramPreview() {
         }
         
         const result = await response.json();
-        
-        // Prüfe auf GA Event Header
-        const gaEvent = response.headers.get('X-GA-Event');
-        const gaCountry = response.headers.get('X-GA-Country');
-        if (gaEvent === 'epg_preview' && gaCountry) {
-          trackEpgPreview(gaCountry);
-        }
         
         if (!mounted) return;
         

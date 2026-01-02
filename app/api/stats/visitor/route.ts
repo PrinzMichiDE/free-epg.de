@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { incrementVisitors, getStats } from '@/lib/stats-service';
-import { trackVisitor } from '@/lib/analytics';
 
 /**
  * API Route zum Inkrementieren des Besucherzählers

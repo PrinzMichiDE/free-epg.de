@@ -11,7 +11,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { CountrySelector } from './country-selector';
 import { useTranslations } from '@/hooks/use-translations';
-import { trackEpgDownload } from '@/lib/analytics';
 
 export function IptvLinkCard() {
   const { t } = useTranslations();
@@ -33,7 +32,13 @@ export function IptvLinkCard() {
       setTimeout(() => setCopied(false), 3000);
       
       // Track EPG URL Copy Event
-      trackEpgDownload(selectedCountry, navigator.userAgent);
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'epg_url_copied', {
+          country: selectedCountry,
+          user_agent: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+        });
+      }
     } catch (err) {
       console.error('Fehler beim Kopieren:', err);
     }

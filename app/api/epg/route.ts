@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getEpgData, getAvailableCountries } from '@/lib/epg-service';
 import { incrementDownloads } from '@/lib/stats-service';
-import { trackEpgDownload, trackApiError } from '@/lib/analytics';
 
 /**
  * API Route Handler für EPG XML
