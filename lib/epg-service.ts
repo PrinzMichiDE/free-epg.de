@@ -686,6 +686,7 @@ function normalizeArray<T>(value: T | T[] | undefined): T[] {
 
 /**
  * Merged mehrere EPG XML Dateien zu einer einzigen
+ * Verbesserte Logik: Bessere Deduplizierung, Programm-Merging pro Kanal
  */
 function mergeEpgData(xmlDataArray: string[]): string {
   console.log(`[EPG] Merge ${xmlDataArray.length} Quellen...`);
@@ -708,25 +709,82 @@ function mergeEpgData(xmlDataArray: string[]): string {
     throw new Error('Keine gültigen EPG Daten gefunden');
   }
 
-  // Sammle alle Channels und Programme
+  // Sammle alle Channels (mit verbesserter Deduplizierung)
   const channelsMap = new Map<string, XmlTvChannel>();
-  const programmesArray: XmlTvProgramme[] = [];
+  
+  // Programme pro Kanal sammeln (für besseres Merging)
+  const programmesByChannel = new Map<string, Map<string, XmlTvProgramme>>();
 
   for (const data of parsedData) {
-    // Channels sammeln (mit Deduplizierung)
+    // Channels sammeln (mit Priorisierung - spätere Quellen überschreiben frühere)
     const channels = normalizeArray(data.tv.channel);
     for (const channel of channels) {
       if (channel['@_id']) {
-        channelsMap.set(channel['@_id'], channel);
+        // Wenn Channel bereits existiert, merge die Daten (behalte bessere Icon/Name)
+        const existing = channelsMap.get(channel['@_id']);
+        if (existing) {
+          // Merge: Behalte bessere Daten
+          if (!existing.icon && channel.icon) {
+            existing.icon = channel.icon;
+          }
+          if (!existing['display-name'] || 
+              (typeof existing['display-name'] === 'string' && existing['display-name'].length < 3) ||
+              (Array.isArray(existing['display-name']) && existing['display-name'].length === 0)) {
+            existing['display-name'] = channel['display-name'];
+          }
+        } else {
+          channelsMap.set(channel['@_id'], channel);
+        }
       }
     }
 
-    // Programme sammeln
+    // Programme sammeln (gruppiert nach Kanal)
     const programmes = normalizeArray(data.tv.programme);
-    programmesArray.push(...programmes);
+    for (const programme of programmes) {
+      const channelId = programme['@_channel'];
+      if (!channelId) continue;
+      
+      // Erstelle eindeutigen Key für Programm (Channel + Start + Stop)
+      const programKey = `${programme['@_start']}_${programme['@_stop']}`;
+      
+      if (!programmesByChannel.has(channelId)) {
+        programmesByChannel.set(channelId, new Map());
+      }
+      
+      const channelProgrammes = programmesByChannel.get(channelId)!;
+      
+      // Deduplizierung: Wenn Programm bereits existiert, behalte das mit mehr Daten
+      if (channelProgrammes.has(programKey)) {
+        const existing = channelProgrammes.get(programKey)!;
+        // Merge: Behalte Programm mit mehr Informationen
+        if (!existing.desc && programme.desc) {
+          existing.desc = programme.desc;
+        }
+        if (!existing.category && programme.category) {
+          existing.category = programme.category;
+        }
+        if (typeof existing.title === 'string' && existing.title.length < 3 && programme.title) {
+          existing.title = programme.title;
+        }
+      } else {
+        channelProgrammes.set(programKey, programme);
+      }
+    }
   }
 
-  // Sortiere Programme nach Start-Zeit
+  // Konvertiere Programme-Map zu Array und sortiere
+  const programmesArray: XmlTvProgramme[] = [];
+  for (const [channelId, channelProgrammes] of programmesByChannel) {
+    // Sortiere Programme pro Kanal nach Start-Zeit
+    const sortedProgrammes = Array.from(channelProgrammes.values()).sort((a, b) => {
+      const startA = a['@_start'] || '';
+      const startB = b['@_start'] || '';
+      return startA.localeCompare(startB);
+    });
+    programmesArray.push(...sortedProgrammes);
+  }
+
+  // Sortiere alle Programme global nach Start-Zeit
   programmesArray.sort((a, b) => {
     const startA = a['@_start'] || '';
     const startB = b['@_start'] || '';
@@ -736,8 +794,8 @@ function mergeEpgData(xmlDataArray: string[]): string {
   // Erstelle gemergtes XML Objekt
   const mergedData: XmlTvRoot = {
     tv: {
-      '@_generator-info-name': 'EPG Service',
-      '@_generator-info-url': 'https://github.com',
+      '@_generator-info-name': 'EPG Service - Multi-Source',
+      '@_generator-info-url': 'https://www.free-epg.de',
       channel: Array.from(channelsMap.values()),
       programme: programmesArray,
     },
@@ -747,7 +805,7 @@ function mergeEpgData(xmlDataArray: string[]): string {
   const xmlOutput = '<?xml version="1.0" encoding="UTF-8"?>\n' + builder.build(mergedData);
 
   console.log(
-    `[EPG] Merge abgeschlossen: ${channelsMap.size} Channels, ${programmesArray.length} Programme`
+    `[EPG] Merge abgeschlossen: ${channelsMap.size} Channels, ${programmesArray.length} Programme aus ${parsedData.length} Quellen`
   );
 
   return xmlOutput;

@@ -12,6 +12,7 @@ import { FaqSection } from '@/components/faq-section';
 import { KoFiSupport } from '@/components/kofi-support';
 import { KoFiFloatingButton } from '@/components/kofi-floating-button';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { EpgProgramPreview } from '@/components/epg-program-preview';
 import { SignalIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useTranslations } from '@/hooks/use-translations';
 import Script from 'next/script';
@@ -207,6 +208,11 @@ export default function HomePage() {
         {/* Stats - Simple */}
         <div id="stats" className="mb-16">
           <StatsCard />
+        </div>
+
+        {/* EPG Program Preview */}
+        <div className="mb-16">
+          <EpgProgramPreview />
         </div>
 
         {/* Support Section */}
