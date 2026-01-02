@@ -75,18 +75,21 @@ export function EpgAutoUpdater() {
     <AnimatePresence>
       {(updateStatus.checking || updateStatus.updating) && (
         <motion.div
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -50 }}
-          className="fixed top-4 right-4 z-50"
+          initial={{ opacity: 0, y: -50, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -50, scale: 0.95 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed top-6 right-6 z-50"
         >
-          <div className="bg-gradient-to-r from-blue-500/90 to-purple-600/90 backdrop-blur-md border border-white/20 rounded-lg shadow-xl px-4 py-3 flex items-center space-x-3">
-            <ArrowPathIcon
-              className={`w-5 h-5 text-white ${
-                updateStatus.updating ? 'animate-spin' : ''
-              }`}
-            />
-            <span className="text-white font-medium text-sm">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl px-5 py-3.5 flex items-center space-x-3.5 hover:border-white/30 transition-all duration-200">
+            <div className={`p-1.5 rounded-lg ${updateStatus.updating ? 'bg-blue-500/20' : 'bg-slate-500/20'}`}>
+              <ArrowPathIcon
+                className={`w-4 h-4 text-white ${
+                  updateStatus.updating ? 'animate-spin' : ''
+                }`}
+              />
+            </div>
+            <span className="text-white font-semibold text-sm">
               {updateStatus.checking
                 ? 'Prüfe EPG-Status...'
                 : updateStatus.message}

@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { StatsCard } from '@/components/stats-card';
 import { SupportBanner } from '@/components/support-banner';
 import { EpgAutoUpdater } from '@/components/epg-auto-updater';
@@ -30,7 +31,7 @@ export default function HomePage() {
 
   // Normale Website: Volle Homepage
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Auto-Update Checker */}
       <EpgAutoUpdater />
       
@@ -39,28 +40,49 @@ export default function HomePage() {
       
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 right-1/3 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-4">
-            <div className="p-3 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-2xl shadow-lg">
-              <SignalIcon className="w-12 h-12 text-white" />
+        <div className="text-center mb-16">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="flex items-center justify-center mb-6"
+          >
+            <div className="p-4 bg-gradient-to-br from-emerald-500/20 to-blue-600/20 backdrop-blur-xl border border-emerald-500/30 rounded-2xl shadow-2xl">
+              <SignalIcon className="w-14 h-14 text-white" />
             </div>
-          </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-blue-500 to-purple-600">
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
+            className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-blue-500 to-purple-600 tracking-tight"
+          >
             EPG Service
-          </h1>
-          <p className="text-xl text-slate-300 mb-2 flex items-center justify-center">
-            <SparklesIcon className="w-5 h-5 mr-2 text-emerald-400" />
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-xl md:text-2xl text-slate-300 mb-3 flex items-center justify-center font-medium"
+          >
+            <SparklesIcon className="w-6 h-6 mr-2.5 text-emerald-400" />
             Electronic Program Guide API
-          </p>
-          <p className="text-sm text-slate-400">
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="text-sm md:text-base text-slate-400"
+          >
             Mehrere Quellen • Intelligent gemerged • Täglich aktualisiert
-          </p>
+          </motion.p>
         </div>
 
         {/* AdSense Banner - Top */}
@@ -73,23 +95,29 @@ export default function HomePage() {
         </div>
 
         {/* IPTV Link Card - Prominent */}
-        <div className="mb-8">
+        <div className="mb-10">
           <IptvLinkCard />
         </div>
 
         {/* Quick Links */}
-        <QuickLinks />
+        <div className="mb-10">
+          <QuickLinks />
+        </div>
 
         {/* Stats */}
-        <div id="stats" className="mb-8">
+        <div id="stats" className="mb-10">
           <StatsCard />
         </div>
 
         {/* EPG Preview */}
-        <EpgPreviewCard />
+        <div className="mb-10">
+          <EpgPreviewCard />
+        </div>
 
         {/* Performance Metrics */}
-        <PerformanceMetrics />
+        <div className="mb-10">
+          <PerformanceMetrics />
+        </div>
 
         {/* AdSense Banner - Middle */}
         <div className="mb-8">
@@ -101,13 +129,19 @@ export default function HomePage() {
         </div>
 
         {/* Features */}
-        <FeaturesGrid />
+        <div className="mb-10">
+          <FeaturesGrid />
+        </div>
 
         {/* Useful Features */}
-        <UsefulFeatures />
+        <div className="mb-10">
+          <UsefulFeatures />
+        </div>
 
         {/* TV Player Ultra */}
-        <TvPlayerUltra />
+        <div className="mb-10">
+          <TvPlayerUltra />
+        </div>
 
         {/* AdSense Banner - After TV Player */}
         <div className="mb-8">
@@ -119,10 +153,14 @@ export default function HomePage() {
         </div>
 
         {/* FAQ Section */}
-        <FaqSection />
+        <div className="mb-10">
+          <FaqSection />
+        </div>
 
         {/* Support Banner */}
-        <SupportBanner />
+        <div className="mb-10">
+          <SupportBanner />
+        </div>
 
         {/* AdSense Banner - Bottom */}
         <div className="mb-8">
@@ -134,8 +172,8 @@ export default function HomePage() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-12 text-center text-slate-500 text-sm">
-          <p>
+        <footer className="mt-16 pt-8 border-t border-white/10 text-center text-slate-400 text-sm">
+          <p className="font-medium">
             Erstellt mit Next.js, TypeScript und Headless UI • Open Source
           </p>
         </footer>

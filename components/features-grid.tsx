@@ -107,12 +107,13 @@ export function FeaturesGrid() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
+        transition={{ duration: 0.5 }}
+        className="text-center mb-12"
       >
-        <h2 className="text-3xl font-bold text-white mb-3">
+        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
           Leistungsstarker EPG Service
         </h2>
-        <p className="text-slate-400 text-lg">
+        <p className="text-slate-400 text-lg md:text-xl">
           Alles was du für deine IPTV-Anwendung brauchst
         </p>
       </motion.div>
@@ -121,28 +122,28 @@ export function FeaturesGrid() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
         {features.map((feature, idx) => (
           <motion.div
             key={idx}
             variants={itemVariants}
             whileHover={{ 
-              scale: 1.05,
-              transition: { type: 'spring', stiffness: 300 }
+              y: -4,
+              transition: { type: 'spring', stiffness: 300, damping: 20 }
             }}
             className="group"
           >
-            <div className={`h-full bg-gradient-to-br ${feature.gradient} border border-slate-700 hover:border-slate-600 rounded-xl p-6 backdrop-blur-sm transition-all duration-300`}>
+            <div className={`h-full bg-white/5 backdrop-blur-xl border border-white/10 hover:border-white/20 rounded-2xl p-6 shadow-xl transition-all duration-300 ${feature.gradient}`}>
               {/* Icon */}
-              <div className="mb-4">
-                <div className={`inline-flex p-3 rounded-lg bg-slate-800/80 group-hover:scale-110 transition-transform duration-300`}>
+              <div className="mb-5">
+                <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.gradient} border border-white/10 group-hover:scale-110 group-hover:border-white/20 transition-all duration-300`}>
                   <feature.icon className={`w-7 h-7 ${feature.color}`} />
                 </div>
               </div>
 
               {/* Content */}
-              <h3 className="text-white font-semibold text-lg mb-2">
+              <h3 className="text-white font-bold text-lg mb-2.5">
                 {feature.title}
               </h3>
               <p className="text-slate-400 text-sm leading-relaxed">

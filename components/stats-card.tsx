@@ -63,16 +63,16 @@ export function StatsCard() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="grid grid-cols-1 md:grid-cols-2 gap-4"
+      className="grid grid-cols-1 md:grid-cols-2 gap-6"
     >
       <motion.div
         variants={itemVariants}
-        className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-6 backdrop-blur-sm"
+        className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl hover:border-blue-500/30 hover:bg-white/7 transition-all duration-300"
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-blue-300 font-medium mb-1">Besucher</p>
-            <p className="text-3xl font-bold text-white">
+            <p className="text-xs text-blue-300 font-semibold uppercase tracking-wider mb-2">Besucher</p>
+            <p className="text-4xl font-bold text-white">
               {loading ? (
                 <span className="animate-pulse">...</span>
               ) : (
@@ -80,7 +80,7 @@ export function StatsCard() {
               )}
             </p>
           </div>
-          <div className="p-3 bg-blue-500/20 rounded-lg">
+          <div className="p-4 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl border border-blue-500/30 group-hover:scale-110 transition-transform duration-300">
             <ArrowTrendingUpIcon className="w-8 h-8 text-blue-400" />
           </div>
         </div>
@@ -88,12 +88,12 @@ export function StatsCard() {
 
       <motion.div
         variants={itemVariants}
-        className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 rounded-xl p-6 backdrop-blur-sm"
+        className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl hover:border-emerald-500/30 hover:bg-white/7 transition-all duration-300"
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-emerald-300 font-medium mb-1">Downloads</p>
-            <p className="text-3xl font-bold text-white">
+            <p className="text-xs text-emerald-300 font-semibold uppercase tracking-wider mb-2">Downloads</p>
+            <p className="text-4xl font-bold text-white">
               {loading ? (
                 <span className="animate-pulse">...</span>
               ) : (
@@ -101,7 +101,7 @@ export function StatsCard() {
               )}
             </p>
           </div>
-          <div className="p-3 bg-emerald-500/20 rounded-lg">
+          <div className="p-4 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl border border-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
             <ArrowDownTrayIcon className="w-8 h-8 text-emerald-400" />
           </div>
         </div>

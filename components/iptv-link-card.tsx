@@ -39,21 +39,21 @@ export function IptvLinkCard() {
       className="relative overflow-hidden"
     >
       {/* Animated Background Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-blue-500/20 to-purple-500/20">
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent animate-pulse"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-blue-500/10 to-purple-500/10 rounded-2xl">
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent animate-pulse rounded-2xl"></div>
       </div>
 
       {/* Main Card */}
-      <div className="relative bg-slate-800/80 backdrop-blur-xl border-2 border-emerald-500/50 rounded-2xl p-8 shadow-2xl">
+      <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl hover:border-emerald-500/30 transition-all duration-300">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-xl shadow-lg">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <div className="p-4 bg-gradient-to-br from-emerald-500/20 to-blue-600/20 border border-emerald-500/30 rounded-xl shadow-lg">
               <TvIcon className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white">IPTV EPG URL</h2>
-              <p className="text-sm text-slate-400">Für deine IPTV App</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">IPTV EPG URL</h2>
+              <p className="text-sm text-slate-400 mt-1">Für deine IPTV App</p>
             </div>
           </div>
           <motion.div
@@ -66,27 +66,26 @@ export function IptvLinkCard() {
               repeat: Infinity,
               repeatDelay: 3
             }}
+            className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/30"
           >
-            <LinkIcon className="w-8 h-8 text-emerald-400" />
+            <LinkIcon className="w-6 h-6 text-emerald-400" />
           </motion.div>
         </div>
 
         {/* URL Display */}
-        <div className="bg-slate-900/80 border-2 border-emerald-500/30 rounded-xl p-6 mb-6 backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-3">
+        <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/10 rounded-xl p-6 mb-6 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
               EPG Endpoint
             </span>
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-1">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span className="text-xs text-emerald-400 font-medium">Live</span>
-              </div>
+            <div className="flex items-center space-x-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              <span className="text-xs text-emerald-400 font-semibold">Live</span>
             </div>
           </div>
           
-          <div className="bg-slate-950/50 rounded-lg p-4 mb-4">
-            <code className="text-emerald-300 font-mono text-base md:text-lg break-all leading-relaxed">
+          <div className="bg-slate-950/60 rounded-lg p-4 mb-5 border border-white/5">
+            <code className="text-emerald-300 font-mono text-sm md:text-base break-all leading-relaxed">
               {epgUrl || 'Lädt...'}
             </code>
           </div>
@@ -119,27 +118,27 @@ export function IptvLinkCard() {
         </div>
 
         {/* Instructions */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           <h3 className="text-sm font-semibold text-white flex items-center">
-            <QrCodeIcon className="w-4 h-4 mr-2 text-emerald-400" />
+            <QrCodeIcon className="w-5 h-5 mr-2 text-emerald-400" />
             So verwendest du die URL:
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
-              <div className="text-emerald-400 font-bold text-lg mb-1">1.</div>
-              <p className="text-slate-300 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/5 rounded-xl p-4 hover:border-emerald-500/30 transition-all duration-300">
+              <div className="text-emerald-400 font-bold text-xl mb-2">1.</div>
+              <p className="text-slate-300 text-sm font-medium">
                 URL kopieren
               </p>
             </div>
-            <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
-              <div className="text-blue-400 font-bold text-lg mb-1">2.</div>
-              <p className="text-slate-300 text-sm">
+            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/5 rounded-xl p-4 hover:border-blue-500/30 transition-all duration-300">
+              <div className="text-blue-400 font-bold text-xl mb-2">2.</div>
+              <p className="text-slate-300 text-sm font-medium">
                 In IPTV App einfügen
               </p>
             </div>
-            <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-3">
-              <div className="text-purple-400 font-bold text-lg mb-1">3.</div>
-              <p className="text-slate-300 text-sm">
+            <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/5 rounded-xl p-4 hover:border-purple-500/30 transition-all duration-300">
+              <div className="text-purple-400 font-bold text-xl mb-2">3.</div>
+              <p className="text-slate-300 text-sm font-medium">
                 EPG aktualisieren
               </p>
             </div>
@@ -147,8 +146,8 @@ export function IptvLinkCard() {
         </div>
 
         {/* Compatible Apps Info */}
-        <div className="mt-6 pt-6 border-t border-slate-700">
-          <p className="text-xs text-slate-400 text-center">
+        <div className="mt-8 pt-6 border-t border-white/10">
+          <p className="text-xs text-slate-400 text-center font-medium">
             Kompatibel mit: TiviMate, IPTV Smarters Pro, Perfect Player und vielen anderen IPTV Apps
           </p>
         </div>
