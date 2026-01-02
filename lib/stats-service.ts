@@ -1,90 +1,8 @@
 /**
  * Statistics Service für Besucher- und Download-Counter
  * Mit täglicher Nutzung und Player-Erkennung
- * Verwendet Vercel Edge Config für persistente Speicherung
+ * Verwendet In-Memory-Speicherung
  */
-
-// Vercel Edge Config Import (optional, falls nicht konfiguriert)
-let edgeConfigGet: ((key: string) => Promise<any>) | null = null;
-let edgeConfigToken: string | null = null;
-let edgeConfigStoreId: string | null = null;
-let edgeConfigInitialized = false;
-
-// Initialisiere Edge Config nur wenn Umgebungsvariablen gesetzt sind
-function initializeEdgeConfig(): void {
-  if (edgeConfigInitialized) return;
-  edgeConfigInitialized = true;
-  
-  const connectionString = process.env.EDGE_CONFIG;
-  
-  // Nur initialisieren wenn Connection String vorhanden ist
-  if (!connectionString) {
-    return; // Keine Warnung, da Edge Config optional ist
-  }
-  
-  try {
-    // Extrahiere Store-ID und Token aus Connection String
-    // Format: https://edge-config.vercel.com/{storeId}?token={token}
-    const urlMatch = connectionString.match(/edge-config\.vercel\.com\/([^?]+)/);
-    if (urlMatch) {
-      edgeConfigStoreId = urlMatch[1];
-    }
-    
-    // Extrahiere Token aus Query String
-    // Edge Config URL Format: https://edge-config.vercel.com/{storeId}?token={token}
-    const tokenMatch = connectionString.match(/[?&]token=([^&]+)/);
-    if (tokenMatch) {
-      edgeConfigToken = decodeURIComponent(tokenMatch[1]);
-    }
-    
-    // Fallback: Prüfe auch separate EDGE_CONFIG_TOKEN Variable
-    if (!edgeConfigToken) {
-      edgeConfigToken = process.env.EDGE_CONFIG_TOKEN || null;
-    }
-    
-    // Debug: Zeige an ob Token gefunden wurde (nur erste 8 Zeichen für Sicherheit)
-    if (edgeConfigToken) {
-      console.log(`[Stats] Edge Config initialisiert - Store-ID: ${edgeConfigStoreId?.substring(0, 8)}..., Token: ${edgeConfigToken.substring(0, 8)}...`);
-    } else {
-      console.warn('[Stats] Edge Config Token nicht gefunden. Für Write-Operationen benötigt: EDGE_CONFIG_TOKEN mit Write-Berechtigung');
-    }
-    
-    // Importiere Edge Config get Funktion
-    // Laut Dokumentation: @vercel/edge-config exportiert get direkt
-    // und verwendet automatisch process.env.EDGE_CONFIG
-    const edgeConfigModule = require('@vercel/edge-config');
-    
-    // Prüfe verschiedene mögliche Export-Formate
-    let getFunction = edgeConfigModule.get;
-    
-    // Falls nicht direkt verfügbar, versuche createClient
-    if (!getFunction && edgeConfigModule.createClient) {
-      const client = edgeConfigModule.createClient(connectionString);
-      getFunction = client.get;
-    }
-    
-    if (typeof getFunction === 'function') {
-      // Erstelle eine get Funktion
-      // Edge Config verwendet automatisch EDGE_CONFIG env variable wenn vorhanden
-      edgeConfigGet = async (key: string) => {
-        try {
-          return await getFunction(key);
-        } catch (err) {
-          console.error(`[Stats] Fehler beim Lesen von Edge Config Key ${key}:`, err);
-          return null;
-        }
-      };
-    } else {
-      throw new Error('Edge Config get function not available');
-    }
-  } catch (error) {
-    // Nur warnen wenn Connection String vorhanden aber Initialisierung fehlschlägt
-    console.warn('[Stats] Vercel Edge Config Initialisierung fehlgeschlagen:', error);
-    edgeConfigGet = null;
-    edgeConfigStoreId = null;
-    edgeConfigToken = null;
-  }
-}
 
 interface Stats {
   visitors: number;
@@ -95,7 +13,7 @@ interface Stats {
 interface DailyUsage {
   date: string; // YYYY-MM-DD
   downloads: number;
-  uniqueIPs: string[]; // Array statt Set für Edge Config-Kompatibilität
+  uniqueIPs: string[];
 }
 
 interface PlayerStats {
@@ -118,48 +36,6 @@ const dailyUsage: Map<string, DailyUsage> = new Map();
 
 // Player-Statistiken
 const playerStats: PlayerStats = {};
-
-/**
- * Lädt Stats (In-Memory)
- */
-async function loadStats(): Promise<Stats> {
-  return stats;
-}
-
-/**
- * Speichert Stats (In-Memory)
- */
-async function saveStats(newStats: Stats): Promise<void> {
-  stats = newStats;
-}
-
-/**
- * Lädt tägliche Nutzung (In-Memory)
- */
-async function loadDailyUsage(): Promise<Map<string, DailyUsage>> {
-  return dailyUsage;
-}
-
-/**
- * Speichert tägliche Nutzung (In-Memory)
- */
-async function saveDailyUsage(usage: Map<string, DailyUsage>): Promise<void> {
-  // Map wird direkt modifiziert, keine Aktion nötig
-}
-
-/**
- * Lädt Player-Stats (In-Memory)
- */
-async function loadPlayerStats(): Promise<PlayerStats> {
-  return playerStats;
-}
-
-/**
- * Speichert Player-Stats (In-Memory)
- */
-async function savePlayerStats(newStats: PlayerStats): Promise<void> {
-  Object.assign(playerStats, newStats);
-}
 
 /**
  * Erkennt den Player aus dem User-Agent String
@@ -221,29 +97,21 @@ function getTodayKey(): string {
  * Inkrementiert den Besucherzähler
  */
 export async function incrementVisitors(): Promise<void> {
-  const stats = await loadStats();
   stats.visitors++;
-  await saveStats(stats);
 }
 
 /**
  * Inkrementiert den Download-Zähler mit Player-Erkennung
  */
 export async function incrementDownloads(userAgent?: string | null, ip?: string | null): Promise<void> {
-  // Stats laden und inkrementieren
-  const stats = await loadStats();
   stats.downloads++;
-  await saveStats(stats);
   
   // Player erkennen und zählen
   const player = detectPlayer(userAgent || null);
-  const playerStats = await loadPlayerStats();
   playerStats[player] = (playerStats[player] || 0) + 1;
-  await savePlayerStats(playerStats);
   
   // Tägliche Nutzung tracken
   const todayKey = getTodayKey();
-  const dailyUsage = await loadDailyUsage();
   const todayUsage = dailyUsage.get(todayKey) || {
     date: todayKey,
     downloads: 0,
@@ -267,22 +135,19 @@ export async function incrementDownloads(userAgent?: string | null, ip?: string 
       dailyUsage.delete(dateKey);
     }
   }
-  
-  await saveDailyUsage(dailyUsage);
 }
 
 /**
  * Gibt die aktuellen Statistiken zurück
  */
 export async function getStats(): Promise<Stats> {
-  return await loadStats();
+  return { ...stats };
 }
 
 /**
  * Gibt die tägliche Nutzung zurück (letzte 7 Tage)
  */
 export async function getDailyUsage(): Promise<Array<{ date: string; downloads: number; uniqueIPs: number }>> {
-  const dailyUsage = await loadDailyUsage();
   const result: Array<{ date: string; downloads: number; uniqueIPs: number }> = [];
   const today = new Date();
   
@@ -317,8 +182,6 @@ export async function getDailyUsage(): Promise<Array<{ date: string; downloads: 
  * Gibt die Player-Statistiken zurück
  */
 export async function getPlayerStats(): Promise<PlayerStats> {
-  const playerStats = await loadPlayerStats();
-  
   // Wenn keine Daten vorhanden, gib leeres Objekt zurück
   if (Object.keys(playerStats).length === 0) {
     return {};
@@ -331,18 +194,11 @@ export async function getPlayerStats(): Promise<PlayerStats> {
  * Setzt die Statistiken zurück (behält aber die Basiswerte)
  */
 export async function resetStats(): Promise<void> {
-  const defaultStats: Stats = {
+  stats = {
     visitors: INITIAL_VISITORS,
     downloads: INITIAL_DOWNLOADS,
     lastReset: Date.now(),
   };
-  await saveStats(defaultStats);
-  await saveDailyUsage(new Map());
-  await savePlayerStats({});
-  
-  // Cache zurücksetzen
-  statsCache = null;
-  dailyUsageCache = null;
-  playerStatsCache = null;
+  dailyUsage.clear();
+  Object.keys(playerStats).forEach(key => delete playerStats[key]);
 }
-
