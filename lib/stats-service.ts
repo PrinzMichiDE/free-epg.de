@@ -1,7 +1,23 @@
 /**
  * Statistics Service für Besucher- und Download-Counter
  * Mit täglicher Nutzung und Player-Erkennung
+ * Verwendet Vercel KV für persistente Speicherung
  */
+
+// Vercel KV Import (optional, falls nicht konfiguriert)
+type KvClient = {
+  get: <T>(key: string) => Promise<T | null>;
+  set: (key: string, value: any) => Promise<void>;
+};
+
+let kv: KvClient | null = null;
+try {
+  const kvModule = require('@vercel/kv');
+  kv = kvModule.kv as KvClient;
+} catch {
+  // KV nicht verfügbar, verwende In-Memory-Fallback
+  console.warn('[Stats] Vercel KV nicht verfügbar, verwende In-Memory-Speicher');
+}
 
 interface Stats {
   visitors: number;
@@ -12,7 +28,7 @@ interface Stats {
 interface DailyUsage {
   date: string; // YYYY-MM-DD
   downloads: number;
-  uniqueIPs: Set<string>;
+  uniqueIPs: string[]; // Array statt Set für KV-Kompatibilität
 }
 
 interface PlayerStats {
@@ -23,60 +39,153 @@ interface PlayerStats {
 const INITIAL_VISITORS = 224232;
 const INITIAL_DOWNLOADS = 12231082;
 
-// In-Memory Stats (auf Vercel wird dies pro Serverless Function Instance sein)
-let stats: Stats = {
-  visitors: INITIAL_VISITORS,
-  downloads: INITIAL_DOWNLOADS,
-  lastReset: Date.now(),
-};
+// Cache für aktuelle Stats (wird regelmäßig mit KV synchronisiert)
+let statsCache: Stats | null = null;
+let dailyUsageCache: Map<string, DailyUsage> | null = null;
+let playerStatsCache: PlayerStats | null = null;
 
-// Tägliche Nutzung (pro Datum)
-const dailyUsage: Map<string, DailyUsage> = new Map();
-
-// Player-Statistiken
-const playerStats: PlayerStats = {};
+// KV Keys
+const KV_STATS_KEY = 'epg:stats';
+const KV_DAILY_USAGE_KEY = 'epg:dailyUsage';
+const KV_PLAYER_STATS_KEY = 'epg:playerStats';
 
 /**
- * Initialisiert Fake-Daten für tägliche Nutzung (wenn keine echten Daten vorhanden)
+ * Prüft ob KV verfügbar ist
  */
-function initializeFakeDailyUsage(): void {
-  if (dailyUsage.size > 0) return; // Nur wenn keine Daten vorhanden
-  
-  const today = new Date();
-  const fakePlayers = ['TiviMate', 'IPTV Smarters Pro', 'Perfect Player', 'Kodi', 'VLC', 'Chrome', 'Firefox'];
-  
-  // Generiere Fake-Daten für die letzten 7 Tage
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    const dateKey = date.toISOString().split('T')[0];
-    
-    // Realistische tägliche Downloads (zwischen 5000 und 15000)
-    const downloads = Math.floor(Math.random() * 10000) + 5000;
-    const uniqueIPs = new Set<string>();
-    
-    // Generiere einige Fake-IPs
-    for (let j = 0; j < Math.floor(downloads / 100); j++) {
-      uniqueIPs.add(`192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`);
-    }
-    
-    dailyUsage.set(dateKey, {
-      date: dateKey,
-      downloads,
-      uniqueIPs,
-    });
+function isKvAvailable(): boolean {
+  try {
+    return kv !== null && typeof kv !== 'undefined';
+  } catch {
+    return false;
   }
-  
-  // Generiere Fake Player-Statistiken
-  fakePlayers.forEach((player, idx) => {
-    // Realistische Verteilung
-    const baseCount = [45000, 32000, 28000, 15000, 12000, 8000, 5000][idx] || 3000;
-    playerStats[player] = baseCount + Math.floor(Math.random() * 5000);
-  });
 }
 
-// Initialisiere Fake-Daten beim Start
-initializeFakeDailyUsage();
+/**
+ * Lädt Stats aus KV oder gibt Standardwerte zurück
+ */
+async function loadStats(): Promise<Stats> {
+  if (statsCache) return statsCache;
+  
+  if (isKvAvailable() && kv) {
+    try {
+      const kvStats = await kv.get(KV_STATS_KEY) as Stats | null;
+      if (kvStats) {
+        statsCache = kvStats;
+        return kvStats;
+      }
+    } catch (error) {
+      console.error('[Stats] Fehler beim Laden aus KV:', error);
+    }
+  }
+  
+  // Fallback: Standardwerte
+  const defaultStats: Stats = {
+    visitors: INITIAL_VISITORS,
+    downloads: INITIAL_DOWNLOADS,
+    lastReset: Date.now(),
+  };
+  statsCache = defaultStats;
+  return defaultStats;
+}
+
+/**
+ * Speichert Stats in KV
+ */
+async function saveStats(stats: Stats): Promise<void> {
+  statsCache = stats;
+  
+  if (isKvAvailable() && kv) {
+    try {
+      await kv.set(KV_STATS_KEY, stats);
+    } catch (error) {
+      console.error('[Stats] Fehler beim Speichern in KV:', error);
+    }
+  }
+}
+
+/**
+ * Lädt tägliche Nutzung aus KV
+ */
+async function loadDailyUsage(): Promise<Map<string, DailyUsage>> {
+  if (dailyUsageCache) return dailyUsageCache;
+  
+  const usageMap = new Map<string, DailyUsage>();
+  
+  if (isKvAvailable() && kv) {
+    try {
+      const kvUsage = await kv.get(KV_DAILY_USAGE_KEY) as Record<string, DailyUsage> | null;
+      if (kvUsage) {
+        Object.entries(kvUsage).forEach(([date, usage]) => {
+          usageMap.set(date, usage);
+        });
+        dailyUsageCache = usageMap;
+        return usageMap;
+      }
+    } catch (error) {
+      console.error('[Stats] Fehler beim Laden der täglichen Nutzung aus KV:', error);
+    }
+  }
+  
+  dailyUsageCache = usageMap;
+  return usageMap;
+}
+
+/**
+ * Speichert tägliche Nutzung in KV
+ */
+async function saveDailyUsage(usage: Map<string, DailyUsage>): Promise<void> {
+  dailyUsageCache = usage;
+  
+  if (isKvAvailable() && kv) {
+    try {
+      const usageObj: Record<string, DailyUsage> = {};
+      usage.forEach((value, key) => {
+        usageObj[key] = value;
+      });
+      await kv.set(KV_DAILY_USAGE_KEY, usageObj);
+    } catch (error) {
+      console.error('[Stats] Fehler beim Speichern der täglichen Nutzung in KV:', error);
+    }
+  }
+}
+
+/**
+ * Lädt Player-Stats aus KV
+ */
+async function loadPlayerStats(): Promise<PlayerStats> {
+  if (playerStatsCache) return playerStatsCache;
+  
+  if (isKvAvailable() && kv) {
+    try {
+      const kvStats = await kv.get(KV_PLAYER_STATS_KEY) as PlayerStats | null;
+      if (kvStats) {
+        playerStatsCache = kvStats;
+        return kvStats;
+      }
+    } catch (error) {
+      console.error('[Stats] Fehler beim Laden der Player-Stats aus KV:', error);
+    }
+  }
+  
+  const defaultStats: PlayerStats = {};
+  playerStatsCache = defaultStats;
+  return defaultStats;
+}
+
+/**
+ * Speichert Player-Stats in KV
+ */
+async function savePlayerStats(stats: PlayerStats): Promise<void> {
+  playerStatsCache = stats;
+  
+  if (isKvAvailable() && kv) {
+    try {
+      await kv.set(KV_PLAYER_STATS_KEY, stats);
+    } catch (error) {
+      console.error('[Stats] Fehler beim Speichern der Player-Stats in KV:', error);
+    }
+  }
+}
 
 /**
  * Erkennt den Player aus dem User-Agent String
@@ -137,31 +246,39 @@ function getTodayKey(): string {
 /**
  * Inkrementiert den Besucherzähler
  */
-export function incrementVisitors(): void {
+export async function incrementVisitors(): Promise<void> {
+  const stats = await loadStats();
   stats.visitors++;
+  await saveStats(stats);
 }
 
 /**
  * Inkrementiert den Download-Zähler mit Player-Erkennung
  */
-export function incrementDownloads(userAgent?: string | null, ip?: string | null): void {
+export async function incrementDownloads(userAgent?: string | null, ip?: string | null): Promise<void> {
+  // Stats laden und inkrementieren
+  const stats = await loadStats();
   stats.downloads++;
+  await saveStats(stats);
   
   // Player erkennen und zählen
   const player = detectPlayer(userAgent || null);
+  const playerStats = await loadPlayerStats();
   playerStats[player] = (playerStats[player] || 0) + 1;
+  await savePlayerStats(playerStats);
   
   // Tägliche Nutzung tracken
   const todayKey = getTodayKey();
+  const dailyUsage = await loadDailyUsage();
   const todayUsage = dailyUsage.get(todayKey) || {
     date: todayKey,
     downloads: 0,
-    uniqueIPs: new Set<string>(),
+    uniqueIPs: [],
   };
   
   todayUsage.downloads++;
-  if (ip) {
-    todayUsage.uniqueIPs.add(ip);
+  if (ip && !todayUsage.uniqueIPs.includes(ip)) {
+    todayUsage.uniqueIPs.push(ip);
   }
   
   dailyUsage.set(todayKey, todayUsage);
@@ -176,22 +293,22 @@ export function incrementDownloads(userAgent?: string | null, ip?: string | null
       dailyUsage.delete(dateKey);
     }
   }
+  
+  await saveDailyUsage(dailyUsage);
 }
 
 /**
  * Gibt die aktuellen Statistiken zurück
  */
-export function getStats(): Stats {
-  return { ...stats };
+export async function getStats(): Promise<Stats> {
+  return await loadStats();
 }
 
 /**
  * Gibt die tägliche Nutzung zurück (letzte 7 Tage)
  */
-export function getDailyUsage(): Array<{ date: string; downloads: number; uniqueIPs: number }> {
-  // Initialisiere Fake-Daten falls keine vorhanden
-  initializeFakeDailyUsage();
-  
+export async function getDailyUsage(): Promise<Array<{ date: string; downloads: number; uniqueIPs: number }>> {
+  const dailyUsage = await loadDailyUsage();
   const result: Array<{ date: string; downloads: number; uniqueIPs: number }> = [];
   const today = new Date();
   
@@ -203,20 +320,18 @@ export function getDailyUsage(): Array<{ date: string; downloads: number; unique
     
     const usage = dailyUsage.get(dateKey);
     
-    // Wenn keine echten Daten vorhanden, verwende Fake-Daten
-    if (!usage || usage.downloads === 0) {
-      const fakeDownloads = Math.floor(Math.random() * 10000) + 5000;
-      const fakeIPs = Math.floor(fakeDownloads / 100);
-      result.push({
-        date: dateKey,
-        downloads: fakeDownloads,
-        uniqueIPs: fakeIPs,
-      });
-    } else {
+    if (usage && usage.downloads > 0) {
       result.push({
         date: dateKey,
         downloads: usage.downloads,
-        uniqueIPs: usage.uniqueIPs.size,
+        uniqueIPs: usage.uniqueIPs.length,
+      });
+    } else {
+      // Fallback: 0 wenn keine Daten vorhanden
+      result.push({
+        date: dateKey,
+        downloads: 0,
+        uniqueIPs: 0,
       });
     }
   }
@@ -227,24 +342,12 @@ export function getDailyUsage(): Array<{ date: string; downloads: number; unique
 /**
  * Gibt die Player-Statistiken zurück
  */
-export function getPlayerStats(): PlayerStats {
-  // Initialisiere Fake-Daten falls keine vorhanden
-  initializeFakeDailyUsage();
+export async function getPlayerStats(): Promise<PlayerStats> {
+  const playerStats = await loadPlayerStats();
   
-  // Wenn keine echten Player-Daten vorhanden, gib Fake-Daten zurück
+  // Wenn keine Daten vorhanden, gib leeres Objekt zurück
   if (Object.keys(playerStats).length === 0) {
-    const fakePlayers: PlayerStats = {
-      'TiviMate': 45000,
-      'IPTV Smarters Pro': 32000,
-      'Perfect Player': 28000,
-      'Kodi': 15000,
-      'VLC': 12000,
-      'Chrome': 8000,
-      'Firefox': 5000,
-      'ExoPlayer': 3500,
-      'Other': 2500,
-    };
-    return fakePlayers;
+    return {};
   }
   
   return { ...playerStats };
@@ -253,13 +356,19 @@ export function getPlayerStats(): PlayerStats {
 /**
  * Setzt die Statistiken zurück (behält aber die Basiswerte)
  */
-export function resetStats(): void {
-  stats = {
+export async function resetStats(): Promise<void> {
+  const defaultStats: Stats = {
     visitors: INITIAL_VISITORS,
     downloads: INITIAL_DOWNLOADS,
     lastReset: Date.now(),
   };
-  dailyUsage.clear();
-  Object.keys(playerStats).forEach(key => delete playerStats[key]);
+  await saveStats(defaultStats);
+  await saveDailyUsage(new Map());
+  await savePlayerStats({});
+  
+  // Cache zurücksetzen
+  statsCache = null;
+  dailyUsageCache = null;
+  playerStatsCache = null;
 }
 

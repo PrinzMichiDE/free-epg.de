@@ -7,8 +7,8 @@ import { incrementVisitors, getStats } from '@/lib/stats-service';
  */
 export async function POST() {
   try {
-    incrementVisitors();
-    const stats = getStats();
+    await incrementVisitors();
+    const stats = await getStats();
     
     return NextResponse.json(
       {

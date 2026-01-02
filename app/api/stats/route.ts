@@ -10,9 +10,9 @@ import { getStats, getDailyUsage, getPlayerStats } from '@/lib/stats-service';
  */
 export async function GET() {
   try {
-    const stats = getStats();
-    const dailyUsage = getDailyUsage();
-    const playerStats = getPlayerStats();
+    const stats = await getStats();
+    const dailyUsage = await getDailyUsage();
+    const playerStats = await getPlayerStats();
     
     // Top 10 Player sortieren
     const topPlayers = Object.entries(playerStats)

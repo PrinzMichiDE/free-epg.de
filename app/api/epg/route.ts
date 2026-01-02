@@ -26,7 +26,9 @@ export async function GET(request: Request) {
     const xmlData = await getEpgData(countryCode);
     
     // Download-Counter inkrementieren mit Player-Erkennung (NACH erfolgreichem Laden)
-    incrementDownloads(userAgent, ip);
+    incrementDownloads(userAgent, ip).catch(err => {
+      console.error('[API] Fehler beim Inkrementieren der Downloads:', err);
+    });
     
     // XML mit korrektem Content-Type zurückgeben
     return new NextResponse(xmlData, {
@@ -39,7 +41,9 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     // Auch bei Fehlern tracken (für Statistiken über fehlgeschlagene Requests)
-    incrementDownloads(userAgent, ip);
+    incrementDownloads(userAgent, ip).catch(err => {
+      console.error('[API] Fehler beim Inkrementieren der Downloads:', err);
+    });
     
     console.error('[API] Fehler beim Abrufen der EPG Daten:', error);
     
