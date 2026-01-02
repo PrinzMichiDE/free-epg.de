@@ -24,8 +24,9 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="antialiased touch-manipulation">
-        {/* Google Analytics 4 */}
+        {/* Google tag (gtag.js) */}
         <Script
+          async
           src="https://www.googletagmanager.com/gtag/js?id=G-JY5JMCCEG5"
           strategy="afterInteractive"
         />
@@ -34,9 +35,7 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-JY5JMCCEG5', {
-              page_path: window.location.pathname,
-            });
+            gtag('config', 'G-JY5JMCCEG5');
             
             // Track page views on client-side navigation (Next.js)
             if (typeof window !== 'undefined') {
@@ -62,39 +61,38 @@ export default function RootLayout({
                   page_path: window.location.pathname + window.location.search,
                 });
               });
-            }
-            
-            // Intercept fetch requests to track API calls
-            const originalFetch = window.fetch;
-            window.fetch = function(...args) {
-              const url = args[0] instanceof Request ? args[0].url : args[0];
-              return originalFetch.apply(this, args).then(response => {
-                // Check for GA Event headers
-                const gaEvent = response.headers.get('X-GA-Event');
-                const gaCountry = response.headers.get('X-GA-Country');
-                
-                if (gaEvent && window.gtag) {
-                  if (gaEvent === 'epg_download' && gaCountry) {
-                    window.gtag('event', 'epg_download', {
-                      country: gaCountry,
-                      user_agent: navigator.userAgent,
-                      timestamp: new Date().toISOString(),
-                    });
-                  } else if (gaEvent === 'epg_preview' && gaCountry) {
-                    window.gtag('event', 'epg_preview', {
-                      country: gaCountry,
-                      timestamp: new Date().toISOString(),
-                    });
-                  } else if (gaEvent === 'visitor') {
-                    window.gtag('event', 'visitor', {
-                      timestamp: new Date().toISOString(),
-                    });
+              
+              // Intercept fetch requests to track API calls
+              const originalFetch = window.fetch;
+              window.fetch = function(...args) {
+                const url = args[0] instanceof Request ? args[0].url : args[0];
+                return originalFetch.apply(this, args).then(response => {
+                  // Check for GA Event headers
+                  const gaEvent = response.headers.get('X-GA-Event');
+                  const gaCountry = response.headers.get('X-GA-Country');
+                  
+                  if (gaEvent && window.gtag) {
+                    if (gaEvent === 'epg_download' && gaCountry) {
+                      window.gtag('event', 'epg_download', {
+                        country: gaCountry,
+                        user_agent: navigator.userAgent,
+                        timestamp: new Date().toISOString(),
+                      });
+                    } else if (gaEvent === 'epg_preview' && gaCountry) {
+                      window.gtag('event', 'epg_preview', {
+                        country: gaCountry,
+                        timestamp: new Date().toISOString(),
+                      });
+                    } else if (gaEvent === 'visitor') {
+                      window.gtag('event', 'visitor', {
+                        timestamp: new Date().toISOString(),
+                      });
+                    }
                   }
-                }
-                
-                return response;
-              });
-            };
+                  
+                  return response;
+                });
+              };
             }
           `}
         </Script>
