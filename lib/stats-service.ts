@@ -123,9 +123,12 @@ function isEdgeConfigWriteAvailable(): boolean {
   }
   
   try {
-    return isEdgeConfigAvailable() && 
-           edgeConfigToken !== null && 
-           edgeConfigToken !== undefined;
+    // Für Writes brauchen wir sowohl Connection String als auch Token
+    const hasConnectionString = !!process.env.EDGE_CONFIG;
+    const hasToken = edgeConfigToken !== null && edgeConfigToken !== undefined && edgeConfigToken !== '';
+    const hasStoreId = edgeConfigStoreId !== null;
+    
+    return hasConnectionString && hasToken && hasStoreId;
   } catch {
     return false;
   }
@@ -178,7 +181,7 @@ async function saveStats(stats: Stats): Promise<void> {
         edgeConfigStoreId = urlMatch[1];
       }
       
-      if (!edgeConfigStoreId) return;
+      if (!edgeConfigStoreId || !edgeConfigToken) return;
       
       const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`, {
         method: 'PATCH',
@@ -198,10 +201,19 @@ async function saveStats(stats: Stats): Promise<void> {
       });
       
       if (!response.ok) {
-        throw new Error(`Edge Config API error: ${response.status}`);
+        const errorText = await response.text().catch(() => 'Unknown error');
+        // 403 bedeutet meist fehlende Berechtigung - nicht als kritischer Fehler behandeln
+        if (response.status === 403) {
+          console.warn(`[Stats] Edge Config Write nicht autorisiert (403). Token benötigt für Write-Operationen. Stats werden nur im Cache gespeichert.`);
+          return; // Stillschweigend fehlschlagen, Cache bleibt aktiv
+        }
+        throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
       }
     } catch (error) {
-      console.error('[Stats] Fehler beim Speichern in Edge Config:', error);
+      // Nur kritische Fehler loggen, nicht 403 (fehlende Berechtigung)
+      if (error instanceof Error && !error.message.includes('403')) {
+        console.error('[Stats] Fehler beim Speichern in Edge Config:', error);
+      }
     }
   }
 }
@@ -276,10 +288,17 @@ async function saveDailyUsage(usage: Map<string, DailyUsage>): Promise<void> {
       });
       
       if (!response.ok) {
-        throw new Error(`Edge Config API error: ${response.status}`);
+        const errorText = await response.text().catch(() => 'Unknown error');
+        if (response.status === 403) {
+          console.warn(`[Stats] Edge Config Write nicht autorisiert (403). Token benötigt für Write-Operationen.`);
+          return;
+        }
+        throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
       }
     } catch (error) {
-      console.error('[Stats] Fehler beim Speichern der täglichen Nutzung in Edge Config:', error);
+      if (error instanceof Error && !error.message.includes('403')) {
+        console.error('[Stats] Fehler beim Speichern der täglichen Nutzung in Edge Config:', error);
+      }
     }
   }
 }
@@ -345,10 +364,17 @@ async function savePlayerStats(stats: PlayerStats): Promise<void> {
       });
       
       if (!response.ok) {
-        throw new Error(`Edge Config API error: ${response.status}`);
+        const errorText = await response.text().catch(() => 'Unknown error');
+        if (response.status === 403) {
+          console.warn(`[Stats] Edge Config Write nicht autorisiert (403). Token benötigt für Write-Operationen.`);
+          return;
+        }
+        throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
       }
     } catch (error) {
-      console.error('[Stats] Fehler beim Speichern der Player-Stats in Edge Config:', error);
+      if (error instanceof Error && !error.message.includes('403')) {
+        console.error('[Stats] Fehler beim Speichern der Player-Stats in Edge Config:', error);
+      }
     }
   }
 }
