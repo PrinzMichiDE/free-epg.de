@@ -31,6 +31,7 @@ function initializeEdgeConfig(): void {
     }
     
     // Extrahiere Token aus Query String
+    // Edge Config URL Format: https://edge-config.vercel.com/{storeId}?token={token}
     const tokenMatch = connectionString.match(/[?&]token=([^&]+)/);
     if (tokenMatch) {
       edgeConfigToken = decodeURIComponent(tokenMatch[1]);
@@ -39,6 +40,13 @@ function initializeEdgeConfig(): void {
     // Fallback: Prüfe auch separate EDGE_CONFIG_TOKEN Variable
     if (!edgeConfigToken) {
       edgeConfigToken = process.env.EDGE_CONFIG_TOKEN || null;
+    }
+    
+    // Debug: Zeige an ob Token gefunden wurde (nur erste 8 Zeichen für Sicherheit)
+    if (edgeConfigToken) {
+      console.log(`[Stats] Edge Config initialisiert - Store-ID: ${edgeConfigStoreId?.substring(0, 8)}..., Token: ${edgeConfigToken.substring(0, 8)}...`);
+    } else {
+      console.warn('[Stats] Edge Config Token nicht gefunden. Für Write-Operationen benötigt: EDGE_CONFIG_TOKEN mit Write-Berechtigung');
     }
     
     // Importiere Edge Config get Funktion
@@ -193,9 +201,19 @@ async function saveStats(stats: Stats): Promise<void> {
         edgeConfigStoreId = urlMatch[1];
       }
       
-      if (!edgeConfigStoreId || !edgeConfigToken) return;
+      if (!edgeConfigStoreId) {
+        console.warn('[Stats] Edge Config Store-ID nicht gefunden');
+        return;
+      }
       
-      const response = await fetch(`https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`, {
+      if (!edgeConfigToken) {
+        console.warn('[Stats] Edge Config Token nicht gefunden. Token muss im EDGE_CONFIG URL-Parameter oder als EDGE_CONFIG_TOKEN gesetzt sein.');
+        return;
+      }
+      
+      const apiUrl = `https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`;
+      
+      const response = await fetch(apiUrl, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${edgeConfigToken}`,
@@ -216,7 +234,7 @@ async function saveStats(stats: Stats): Promise<void> {
         const errorText = await response.text().catch(() => 'Unknown error');
         // 403 bedeutet meist fehlende Berechtigung - nicht als kritischer Fehler behandeln
         if (response.status === 403) {
-          console.warn(`[Stats] Edge Config Write nicht autorisiert (403). Token benötigt für Write-Operationen. Stats werden nur im Cache gespeichert.`);
+          console.warn(`[Stats] Edge Config Write nicht autorisiert (403). Der Token im EDGE_CONFIG hat möglicherweise nur Read-Berechtigung. Für Writes benötigt: EDGE_CONFIG_TOKEN mit Write-Berechtigung. Stats werden nur im Cache gespeichert.`);
           return; // Stillschweigend fehlschlagen, Cache bleibt aktiv
         }
         throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
