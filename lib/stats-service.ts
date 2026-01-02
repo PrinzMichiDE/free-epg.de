@@ -44,9 +44,9 @@ function initializeEdgeConfig(): void {
     
     // Debug: Zeige an ob Token gefunden wurde (nur erste 8 Zeichen für Sicherheit)
     if (edgeConfigToken) {
-      console.log(`[Stats] Edge Config Token gefunden: ${edgeConfigToken.substring(0, 8)}...`);
+      console.log(`[Stats] Edge Config initialisiert - Store-ID: ${edgeConfigStoreId?.substring(0, 8)}..., Token: ${edgeConfigToken.substring(0, 8)}...`);
     } else {
-      console.warn('[Stats] Edge Config Token nicht gefunden in Connection String oder EDGE_CONFIG_TOKEN');
+      console.warn('[Stats] Edge Config Token nicht gefunden. Für Write-Operationen benötigt: EDGE_CONFIG_TOKEN mit Write-Berechtigung');
     }
     
     // Importiere Edge Config get Funktion
@@ -234,7 +234,7 @@ async function saveStats(stats: Stats): Promise<void> {
         const errorText = await response.text().catch(() => 'Unknown error');
         // 403 bedeutet meist fehlende Berechtigung - nicht als kritischer Fehler behandeln
         if (response.status === 403) {
-          console.warn(`[Stats] Edge Config Write nicht autorisiert (403). Store-ID: ${edgeConfigStoreId.substring(0, 8)}..., Token vorhanden: ${!!edgeConfigToken}. Stats werden nur im Cache gespeichert.`);
+          console.warn(`[Stats] Edge Config Write nicht autorisiert (403). Der Token im EDGE_CONFIG hat möglicherweise nur Read-Berechtigung. Für Writes benötigt: EDGE_CONFIG_TOKEN mit Write-Berechtigung. Stats werden nur im Cache gespeichert.`);
           return; // Stillschweigend fehlschlagen, Cache bleibt aktiv
         }
         throw new Error(`Edge Config API error: ${response.status} - ${errorText}`);
