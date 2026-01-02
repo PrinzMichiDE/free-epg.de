@@ -63,6 +63,39 @@ export default function RootLayout({
                 });
               });
             }
+            
+            // Intercept fetch requests to track API calls
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+              const url = args[0] instanceof Request ? args[0].url : args[0];
+              return originalFetch.apply(this, args).then(response => {
+                // Check for GA Event headers
+                const gaEvent = response.headers.get('X-GA-Event');
+                const gaCountry = response.headers.get('X-GA-Country');
+                
+                if (gaEvent && window.gtag) {
+                  if (gaEvent === 'epg_download' && gaCountry) {
+                    window.gtag('event', 'epg_download', {
+                      country: gaCountry,
+                      user_agent: navigator.userAgent,
+                      timestamp: new Date().toISOString(),
+                    });
+                  } else if (gaEvent === 'epg_preview' && gaCountry) {
+                    window.gtag('event', 'epg_preview', {
+                      country: gaCountry,
+                      timestamp: new Date().toISOString(),
+                    });
+                  } else if (gaEvent === 'visitor') {
+                    window.gtag('event', 'visitor', {
+                      timestamp: new Date().toISOString(),
+                    });
+                  }
+                }
+                
+                return response;
+              });
+            };
+            }
           `}
         </Script>
         <Script

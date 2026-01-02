@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getEpgData, getAvailableCountries } from '@/lib/epg-service';
 import { incrementDownloads } from '@/lib/stats-service';
+import { trackEpgDownload, trackApiError } from '@/lib/analytics';
 
 /**
  * API Route Handler für EPG XML
@@ -30,8 +31,21 @@ export async function GET(request: Request) {
       console.error('[API] Fehler beim Inkrementieren der Downloads:', err);
     });
     
+    // Google Analytics Event senden (Client-Side)
+    // Hinweis: Event wird im Client getrackt, da wir hier Server-Side sind
+    // Wir fügen einen Header hinzu, der im Client ausgelesen werden kann
+    
     // XML mit korrektem Content-Type zurückgeben
+    // GA Event wird über Header an Client weitergegeben
     return new NextResponse(xmlData, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'X-GA-Event': 'epg_download',
+        'X-GA-Country': countryCode,
+        // Cache-Header für Browser/CDN (1 Stunde)
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
       status: 200,
       headers: {
         'Content-Type': 'application/xml; charset=utf-8',

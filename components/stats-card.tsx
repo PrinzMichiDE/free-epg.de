@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowTrendingUpIcon, ArrowDownTrayIcon, ChartBarIcon, DevicePhoneMobileIcon } from '@heroicons/react/24/outline';
 import { useEffect, useState } from 'react';
 import { useTranslations } from '@/hooks/use-translations';
+import { trackEvent } from '@/lib/analytics';
 
 interface StatsData {
   visitors: number;
@@ -26,7 +27,15 @@ export function StatsCard() {
 
   useEffect(() => {
     // Besucher-Counter inkrementieren
-    fetch('/api/stats/visitor', { method: 'POST' }).catch(console.error);
+    fetch('/api/stats/visitor', { method: 'POST' })
+      .then(response => {
+        // Prüfe auf GA Event Header
+        const gaEvent = response.headers.get('X-GA-Event');
+        if (gaEvent === 'visitor') {
+          trackEvent('visitor', { timestamp: new Date().toISOString() });
+        }
+      })
+      .catch(console.error);
 
     // Statistiken laden
     const loadStats = async () => {

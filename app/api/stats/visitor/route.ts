@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { incrementVisitors, getStats } from '@/lib/stats-service';
+import { trackVisitor } from '@/lib/analytics';
 
 /**
  * API Route zum Inkrementieren des Besucherzählers
@@ -10,13 +11,18 @@ export async function POST() {
     await incrementVisitors();
     const stats = await getStats();
     
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: true,
         visitors: stats.visitors,
       },
       { status: 200 }
     );
+    
+    // Google Analytics Event Header für Client-Side Tracking
+    response.headers.set('X-GA-Event', 'visitor');
+    
+    return response;
   } catch (error) {
     console.error('[API] Fehler beim Inkrementieren des Besucherzählers:', error);
     

@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { CountrySelector } from './country-selector';
 import { useTranslations } from '@/hooks/use-translations';
+import { trackEpgDownload } from '@/lib/analytics';
 
 export function IptvLinkCard() {
   const { t } = useTranslations();
@@ -30,6 +31,9 @@ export function IptvLinkCard() {
       await navigator.clipboard.writeText(epgUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
+      
+      // Track EPG URL Copy Event
+      trackEpgDownload(selectedCountry, navigator.userAgent);
     } catch (err) {
       console.error('Fehler beim Kopieren:', err);
     }

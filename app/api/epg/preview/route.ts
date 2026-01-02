@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getEpgData } from '@/lib/epg-service';
 import { XMLParser } from 'fast-xml-parser';
+import { trackEpgPreview, trackApiError } from '@/lib/analytics';
 
 /**
  * API Route für EPG Preview Daten
@@ -148,7 +149,7 @@ export async function GET(request: Request) {
       };
     }).filter((ch: any) => ch.programmes.length > 0);
     
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: true,
         country: countryCode,
@@ -160,6 +161,12 @@ export async function GET(request: Request) {
       },
       { status: 200 }
     );
+    
+    // Google Analytics Event Header für Client-Side Tracking
+    response.headers.set('X-GA-Event', 'epg_preview');
+    response.headers.set('X-GA-Country', countryCode);
+    
+    return response;
   } catch (error) {
     console.error('[API] Fehler beim Abrufen der EPG-Preview:', error);
     
