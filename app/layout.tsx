@@ -26,7 +26,7 @@ export default function RootLayout({
       <body className="antialiased touch-manipulation">
         {/* Google Analytics 4 */}
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-340371068"
+          src="https://www.googletagmanager.com/gtag/js?id=G-JY5JMCCEG5"
           strategy="afterInteractive"
         />
         <Script id="google-analytics" strategy="afterInteractive">
@@ -34,7 +34,7 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-340371068', {
+            gtag('config', 'G-JY5JMCCEG5', {
               page_path: window.location.pathname,
             });
             
@@ -45,20 +45,20 @@ export default function RootLayout({
               
               history.pushState = function(...args) {
                 originalPushState.apply(history, args);
-                gtag('config', 'G-340371068', {
+                gtag('config', 'G-JY5JMCCEG5', {
                   page_path: window.location.pathname + window.location.search,
                 });
               };
               
               history.replaceState = function(...args) {
                 originalReplaceState.apply(history, args);
-                gtag('config', 'G-340371068', {
+                gtag('config', 'G-JY5JMCCEG5', {
                   page_path: window.location.pathname + window.location.search,
                 });
               };
               
               window.addEventListener('popstate', function() {
-                gtag('config', 'G-340371068', {
+                gtag('config', 'G-JY5JMCCEG5', {
                   page_path: window.location.pathname + window.location.search,
                 });
               });
