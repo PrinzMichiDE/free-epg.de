@@ -21,7 +21,14 @@ import { PerformanceMetrics } from '@/components/performance-metrics';
 import { AdSenseBanner } from '@/components/adsense-banner';
 import { KoFiSupport } from '@/components/kofi-support';
 import { KoFiFloatingButton } from '@/components/kofi-floating-button';
-import { SignalIcon, SparklesIcon, CoffeeIcon } from '@heroicons/react/24/outline';
+import { SignalIcon, SparklesIcon } from '@heroicons/react/24/outline';
+
+// Ko-Fi Coffee Icon SVG Component
+const CoffeeIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 21h18v-2H2v2zM20 8h-2V5c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v3H2c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-4c0-1.1-.9-2-2-2zM6 5h10v3H6V5zm14 9H4v-2h16v2z"/>
+  </svg>
+);
 
 export default function HomePage() {
   const isPWA = usePWAMode();
