@@ -215,11 +215,6 @@ export default function HomePage() {
           <StatsCard />
         </div>
 
-        {/* EPG Program Preview */}
-        <div className="mb-16">
-          <EpgProgramPreview />
-        </div>
-
         {/* Support Section */}
         <div className="mb-16">
           <KoFiSupport variant="hero" />

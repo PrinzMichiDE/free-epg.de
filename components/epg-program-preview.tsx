@@ -41,6 +41,7 @@ export function EpgProgramPreview() {
   const { t, locale } = useTranslations();
   const [data, setData] = useState<EpgPreviewData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState('DE');
   const [expandedChannel, setExpandedChannel] = useState<string | null>(null);
 
@@ -48,14 +49,23 @@ export function EpgProgramPreview() {
     const loadPreview = async () => {
       try {
         setLoading(true);
+        setError(null);
         const response = await fetch(`/api/epg/preview?country=${selectedCountry}&limit=5`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const result = await response.json();
         
         if (result.success) {
           setData(result);
+        } else {
+          setError(result.message || 'Fehler beim Laden der Daten');
         }
       } catch (error) {
         console.error('Fehler beim Laden der EPG-Preview:', error);
+        setError(error instanceof Error ? error.message : 'Unbekannter Fehler');
       } finally {
         setLoading(false);
       }
@@ -78,6 +88,49 @@ export function EpgProgramPreview() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white/5 backdrop-blur-xl border border-red-500/30 rounded-2xl p-8 shadow-2xl"
+      >
+        <div className="flex items-center space-x-4">
+          <div className="p-3 bg-red-500/20 rounded-xl border border-red-500/30">
+            <FilmIcon className="w-6 h-6 text-red-400" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white mb-1">EPG Programm-Vorschau</h3>
+            <p className="text-red-400 text-sm">{error}</p>
+            <button
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                const loadPreview = async () => {
+                  try {
+                    const response = await fetch(`/api/epg/preview?country=${selectedCountry}&limit=5`);
+                    const result = await response.json();
+                    if (result.success) {
+                      setData(result);
+                    }
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Unbekannter Fehler');
+                  } finally {
+                    setLoading(false);
+                  }
+                };
+                loadPreview();
+              }}
+              className="mt-3 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-white text-sm transition-colors"
+            >
+              Erneut versuchen
+            </button>
+          </div>
+        </div>
+      </motion.div>
     );
   }
 

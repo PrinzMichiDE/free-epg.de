@@ -48,17 +48,40 @@ export async function GET(request: Request) {
     
     // Aktuelle Zeit
     const now = new Date();
-    const nowTimestamp = now.toISOString().replace(/[-:]/g, '').split('.')[0];
+    // Erstelle Timestamp im XMLTV Format (YYYYMMDDHHmmss)
+    const nowYear = now.getUTCFullYear();
+    const nowMonth = String(now.getUTCMonth() + 1).padStart(2, '0');
+    const nowDay = String(now.getUTCDate()).padStart(2, '0');
+    const nowHour = String(now.getUTCHours()).padStart(2, '0');
+    const nowMinute = String(now.getUTCMinutes()).padStart(2, '0');
+    const nowSecond = String(now.getUTCSeconds()).padStart(2, '0');
+    const nowTimestamp = `${nowYear}${nowMonth}${nowDay}${nowHour}${nowMinute}${nowSecond}`;
     
     // Programme nach Kanal gruppieren und filtern (nur aktuelle und kommende)
     const programmesByChannel: Record<string, any[]> = {};
     
     programmes.forEach((programme: any) => {
       const channelId = programme['@_channel'];
-      const startTime = programme['@_start'];
+      if (!channelId) return;
       
-      // Nur Programme ab jetzt oder in der nahen Zukunft
-      if (startTime >= nowTimestamp) {
+      const startTime = programme['@_start'];
+      if (!startTime) return;
+      
+      // Extrahiere nur den Zeitstempel-Teil (vor dem Leerzeichen/Zeitzone)
+      const startTimestamp = startTime.split(' ')[0];
+      
+      // Nur Programme ab jetzt oder in der nahen Zukunft (inkl. laufende Programme)
+      // Prüfe auch Stop-Zeit für laufende Programme
+      const stopTime = programme['@_stop'];
+      const stopTimestamp = stopTime ? stopTime.split(' ')[0] : null;
+      
+      // Nimm Programm wenn:
+      // 1. Start-Zeit ist in der Zukunft ODER
+      // 2. Programm läuft gerade (Start < jetzt < Stop)
+      const isUpcoming = startTimestamp >= nowTimestamp;
+      const isCurrent = stopTimestamp && startTimestamp < nowTimestamp && stopTimestamp > nowTimestamp;
+      
+      if (isUpcoming || isCurrent) {
         if (!programmesByChannel[channelId]) {
           programmesByChannel[channelId] = [];
         }
