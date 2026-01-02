@@ -50,22 +50,24 @@ function initializeEdgeConfig(): void {
     }
     
     // Importiere Edge Config get Funktion
-    // Die @vercel/edge-config Bibliothek exportiert get direkt
+    // Laut Dokumentation: @vercel/edge-config exportiert get direkt
+    // und verwendet automatisch process.env.EDGE_CONFIG
     const edgeConfigModule = require('@vercel/edge-config');
     
     // Prüfe verschiedene mögliche Export-Formate
-    let getFunction = edgeConfigModule.get || edgeConfigModule.default?.get || edgeConfigModule;
+    let getFunction = edgeConfigModule.get;
+    
+    // Falls nicht direkt verfügbar, versuche createClient
+    if (!getFunction && edgeConfigModule.createClient) {
+      const client = edgeConfigModule.createClient(connectionString);
+      getFunction = client.get;
+    }
     
     if (typeof getFunction === 'function') {
-      // Erstelle eine get Funktion die den Connection String verwendet
+      // Erstelle eine get Funktion
       // Edge Config verwendet automatisch EDGE_CONFIG env variable wenn vorhanden
       edgeConfigGet = async (key: string) => {
         try {
-          // Versuche mit Connection String Option
-          if (typeof getFunction === 'function' && getFunction.length > 1) {
-            return await getFunction(key, { edgeConfig: connectionString });
-          }
-          // Fallback: direkter Aufruf (nutzt automatisch EDGE_CONFIG env)
           return await getFunction(key);
         } catch (err) {
           console.error(`[Stats] Fehler beim Lesen von Edge Config Key ${key}:`, err);
@@ -211,6 +213,8 @@ async function saveStats(stats: Stats): Promise<void> {
         return;
       }
       
+      // Verwende Vercel API für Writes (laut Dokumentation)
+      // API Endpoint: PATCH /v1/edge-config/{id}/items
       const apiUrl = `https://api.vercel.com/v1/edge-config/${edgeConfigStoreId}/items`;
       
       const response = await fetch(apiUrl, {
@@ -222,7 +226,7 @@ async function saveStats(stats: Stats): Promise<void> {
         body: JSON.stringify({
           items: [
             {
-              operation: 'update',
+              operation: 'upsert', // Verwende 'upsert' statt 'update' für bessere Kompatibilität
               key: EDGE_STATS_KEY,
               value: JSON.stringify(stats),
             },
@@ -309,7 +313,7 @@ async function saveDailyUsage(usage: Map<string, DailyUsage>): Promise<void> {
         body: JSON.stringify({
           items: [
             {
-              operation: 'update',
+              operation: 'upsert',
               key: EDGE_DAILY_USAGE_KEY,
               value: JSON.stringify(usageObj),
             },
@@ -385,7 +389,7 @@ async function savePlayerStats(stats: PlayerStats): Promise<void> {
         body: JSON.stringify({
           items: [
             {
-              operation: 'update',
+              operation: 'upsert',
               key: EDGE_PLAYER_STATS_KEY,
               value: JSON.stringify(stats),
             },
