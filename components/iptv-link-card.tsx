@@ -10,8 +10,10 @@ import {
   QrCodeIcon
 } from '@heroicons/react/24/outline';
 import { CountrySelector } from './country-selector';
+import { useTranslations } from '@/hooks/use-translations';
 
 export function IptvLinkCard() {
+  const { t } = useTranslations();
   const [copied, setCopied] = useState(false);
   const [epgUrl, setEpgUrl] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('DE');
@@ -54,8 +56,8 @@ export function IptvLinkCard() {
               <TvIcon className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Deine Programm-URL</h2>
-              <p className="text-sm text-slate-400 mt-1">Kopiere die URL und füge sie in deine IPTV-App ein</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">{t('iptvCardTitle')}</h2>
+              <p className="text-sm text-slate-400 mt-1">{t('iptvCardSubtitle')}</p>
             </div>
           </div>
           <motion.div
@@ -77,7 +79,7 @@ export function IptvLinkCard() {
         {/* Country Selector */}
         <div className="mb-6">
           <label className="block text-sm font-semibold text-white mb-3">
-            Land auswählen
+            {t('selectCountry')}
           </label>
           <CountrySelector
             selectedCountry={selectedCountry}
@@ -89,7 +91,7 @@ export function IptvLinkCard() {
         <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/10 rounded-xl p-6 mb-6 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-              Programm-URL
+              {t('programUrl')}
             </span>
             <div className="flex items-center space-x-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
@@ -118,12 +120,12 @@ export function IptvLinkCard() {
               {copied ? (
                 <>
                   <CheckIcon className="w-6 h-6" />
-                  <span className="text-lg">URL kopiert!</span>
+                  <span className="text-lg">{t('urlCopied')}</span>
                 </>
               ) : (
                 <>
                   <DocumentDuplicateIcon className="w-6 h-6" />
-                  <span className="text-lg">URL kopieren</span>
+                  <span className="text-lg">{t('copyUrl')}</span>
                 </>
               )}
             </div>
@@ -134,34 +136,34 @@ export function IptvLinkCard() {
         <div className="space-y-4">
           <h3 className="text-base font-semibold text-white flex items-center">
             <QrCodeIcon className="w-5 h-5 mr-2 text-emerald-400" />
-            So einfach geht's:
+            {t('howToUse')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/5 rounded-xl p-5 hover:border-emerald-500/30 transition-all duration-300">
               <div className="text-emerald-400 font-bold text-2xl mb-2">1</div>
               <p className="text-white text-sm font-medium mb-1">
-                URL kopieren
+                {t('step1')}
               </p>
               <p className="text-slate-400 text-xs">
-                Klicke auf den Button oben
+                {t('step1Desc')}
               </p>
             </div>
             <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/5 rounded-xl p-5 hover:border-blue-500/30 transition-all duration-300">
               <div className="text-blue-400 font-bold text-2xl mb-2">2</div>
               <p className="text-white text-sm font-medium mb-1">
-                In App einfügen
+                {t('step2')}
               </p>
               <p className="text-slate-400 text-xs">
-                Öffne deine IPTV-App und füge die URL ein
+                {t('step2Desc')}
               </p>
             </div>
             <div className="bg-gradient-to-br from-slate-900/60 to-slate-800/40 border border-white/5 rounded-xl p-5 hover:border-purple-500/30 transition-all duration-300">
               <div className="text-purple-400 font-bold text-2xl mb-2">3</div>
               <p className="text-white text-sm font-medium mb-1">
-                Fertig!
+                {t('step3')}
               </p>
               <p className="text-slate-400 text-xs">
-                Programmübersicht wird automatisch geladen
+                {t('step3Desc')}
               </p>
             </div>
           </div>
@@ -170,7 +172,7 @@ export function IptvLinkCard() {
         {/* Compatible Apps Info */}
         <div className="mt-8 pt-6 border-t border-white/10">
           <p className="text-sm text-slate-400 text-center font-medium">
-            Funktioniert mit allen gängigen IPTV-Apps wie TiviMate, IPTV Smarters Pro, Perfect Player und vielen mehr
+            {t('compatibleApps')}
           </p>
         </div>
       </div>

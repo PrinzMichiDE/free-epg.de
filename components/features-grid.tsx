@@ -2,15 +2,12 @@
 
 import { motion } from 'framer-motion';
 import {
-  ServerStackIcon,
   BoltIcon,
   ArrowPathIcon,
   ShieldCheckIcon,
   GlobeAltIcon,
-  RocketLaunchIcon,
-  ClockIcon,
-  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
+import { useTranslations } from '@/hooks/use-translations';
 
 interface Feature {
   icon: React.ComponentType<{ className?: string }>;
@@ -20,38 +17,39 @@ interface Feature {
   gradient: string;
 }
 
-const features: Feature[] = [
-  {
-    icon: GlobeAltIcon,
-    title: 'Weltweite Abdeckung',
-    description: 'EPG-Daten für über 13 Länder: Deutschland, USA, UK, Frankreich, Italien, Spanien und mehr',
-    color: 'text-blue-400',
-    gradient: 'from-blue-500/10 to-blue-600/5',
-  },
-  {
-    icon: ArrowPathIcon,
-    title: 'Täglich aktualisiert',
-    description: 'Automatische Aktualisierung - immer die neuesten Programmdaten',
-    color: 'text-emerald-400',
-    gradient: 'from-emerald-500/10 to-emerald-600/5',
-  },
-  {
-    icon: BoltIcon,
-    title: 'Sofort einsatzbereit',
-    description: 'Einfach Land auswählen, URL kopieren und in deiner IPTV-App einfügen - fertig',
-    color: 'text-yellow-400',
-    gradient: 'from-yellow-500/10 to-yellow-600/5',
-  },
-  {
-    icon: ShieldCheckIcon,
-    title: 'Zuverlässig & kostenlos',
-    description: '100% kostenlos, ohne Registrierung und immer verfügbar',
-    color: 'text-purple-400',
-    gradient: 'from-purple-500/10 to-purple-600/5',
-  },
-];
-
 export function FeaturesGrid() {
+  const { t } = useTranslations();
+  
+  const features: Feature[] = [
+    {
+      icon: GlobeAltIcon,
+      title: t('feature1Title'),
+      description: t('feature1Desc'),
+      color: 'text-blue-400',
+      gradient: 'from-blue-500/10 to-blue-600/5',
+    },
+    {
+      icon: ArrowPathIcon,
+      title: t('feature2Title'),
+      description: t('feature2Desc'),
+      color: 'text-emerald-400',
+      gradient: 'from-emerald-500/10 to-emerald-600/5',
+    },
+    {
+      icon: BoltIcon,
+      title: t('feature3Title'),
+      description: t('feature3Desc'),
+      color: 'text-yellow-400',
+      gradient: 'from-yellow-500/10 to-yellow-600/5',
+    },
+    {
+      icon: ShieldCheckIcon,
+      title: t('feature4Title'),
+      description: t('feature4Desc'),
+      color: 'text-purple-400',
+      gradient: 'from-purple-500/10 to-purple-600/5',
+    },
+  ];
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -83,10 +81,10 @@ export function FeaturesGrid() {
         className="text-center mb-12"
       >
         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
-          Warum diesen Service nutzen?
+          {t('featuresTitle')}
         </h2>
         <p className="text-slate-400 text-lg md:text-xl">
-          Einfach, schnell und zuverlässig
+          {t('featuresSubtitle')}
         </p>
       </motion.div>
 
