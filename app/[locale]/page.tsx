@@ -163,6 +163,11 @@ export default function HomePage() {
           <IptvLinkCard />
         </div>
 
+        {/* EPG Program Preview - Prominent */}
+        <div className="mb-16">
+          <EpgProgramPreview />
+        </div>
+
         {/* Key Benefits - Simplified */}
         <div className="mb-16">
           <FeaturesGrid />

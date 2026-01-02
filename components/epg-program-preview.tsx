@@ -9,6 +9,7 @@ import {
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import { useTranslations } from '@/hooks/use-translations';
+import { CountrySelector } from './country-selector';
 
 interface Programme {
   title: string;
@@ -92,7 +93,7 @@ export function EpgProgramPreview() {
       className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl hover:border-white/20 transition-all duration-300"
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-8 gap-4">
         <div className="flex items-center space-x-4">
           <div className="p-3 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl border border-purple-500/30 shadow-lg">
             <FilmIcon className="w-6 h-6 text-purple-400" />
@@ -103,6 +104,15 @@ export function EpgProgramPreview() {
               {data.totalChannels.toLocaleString('de-DE')} Kanäle • {data.totalProgrammes.toLocaleString('de-DE')} Programme
             </p>
           </div>
+        </div>
+        <div className="md:w-64">
+          <label className="block text-sm font-semibold text-white mb-2">
+            Land auswählen
+          </label>
+          <CountrySelector
+            selectedCountry={selectedCountry}
+            onCountryChange={setSelectedCountry}
+          />
         </div>
       </div>
 
