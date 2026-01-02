@@ -13,19 +13,19 @@ import { incrementDownloads } from '@/lib/stats-service';
  * - country: Länder-Code (z.B. DE, US, GB, FR, etc.) - Standard: DE
  */
 export async function GET(request: Request) {
+  // User-Agent und IP für Statistiken extrahieren (immer, auch bei Fehlern)
+  const userAgent = request.headers.get('user-agent');
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
+  const ip = forwardedFor?.split(',')[0] || realIP || null;
+  
   try {
     const { searchParams } = new URL(request.url);
     const countryCode = searchParams.get('country') || 'DE';
     
-    // User-Agent und IP für Statistiken extrahieren
-    const userAgent = request.headers.get('user-agent');
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    const realIP = request.headers.get('x-real-ip');
-    const ip = forwardedFor?.split(',')[0] || realIP || null;
-    
     const xmlData = await getEpgData(countryCode);
     
-    // Download-Counter inkrementieren mit Player-Erkennung
+    // Download-Counter inkrementieren mit Player-Erkennung (NACH erfolgreichem Laden)
     incrementDownloads(userAgent, ip);
     
     // XML mit korrektem Content-Type zurückgeben
@@ -38,6 +38,9 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
+    // Auch bei Fehlern tracken (für Statistiken über fehlgeschlagene Requests)
+    incrementDownloads(userAgent, ip);
+    
     console.error('[API] Fehler beim Abrufen der EPG Daten:', error);
     
     return NextResponse.json(
