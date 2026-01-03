@@ -112,101 +112,155 @@ export function EpgProgramPreview() {
 
   // Berechne Zeit-Spalten (30-Minuten-Intervalle)
   const timeSlots = useMemo(() => {
-    const now = new Date();
-    const slots: Date[] = [];
-    const startHour = now.getHours();
-    const startMinute = Math.floor(now.getMinutes() / 30) * 30;
-    
-    const slotCount = timeWindow * 2; // 2 Slots pro Stunde
-    
-    for (let i = 0; i < slotCount; i++) {
-      const slotTime = new Date(now);
-      slotTime.setHours(startHour, startMinute + (i * 30), 0, 0);
-      slots.push(slotTime);
+    try {
+      const now = new Date();
+      if (isNaN(now.getTime())) {
+        console.error('Invalid current date');
+        return [];
+      }
+      
+      const slots: Date[] = [];
+      const startHour = now.getHours();
+      const startMinute = Math.floor(now.getMinutes() / 30) * 30;
+      
+      const slotCount = Math.max(1, Math.min(timeWindow * 2, 48)); // 2 Slots pro Stunde, max 24h (48 slots)
+      
+      for (let i = 0; i < slotCount; i++) {
+        const slotTime = new Date(now);
+        const totalMinutes = startMinute + (i * 30);
+        const hours = startHour + Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        slotTime.setHours(hours, minutes, 0, 0);
+        
+        if (!isNaN(slotTime.getTime())) {
+          slots.push(slotTime);
+        }
+      }
+      
+      return slots.length > 0 ? slots : [];
+    } catch (error) {
+      console.error('Error calculating time slots:', error);
+      return [];
     }
-    
-    return slots;
   }, [timeWindow]);
 
   const formatTimeSlot = (date: Date) => {
-    return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    try {
+      if (!date || isNaN(date.getTime())) {
+        return '--:--';
+      }
+      return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    } catch (error) {
+      console.error('Error formatting time slot:', error);
+      return '--:--';
+    }
   };
 
-  const getProgrammePosition = (programme: Programme, slots: Date[]) => {
-    if (!slots || slots.length === 0) {
+  const getProgrammePosition = (programme: Programme & { startDateObj: Date }, slots: Date[]) => {
+    if (!slots || slots.length === 0 || !programme.startDateObj) {
       return { left: 0, width: 10 };
     }
     
-    const startDate = new Date(programme.startDate);
-    const startTime = startDate.getTime();
-    const slotWidth = 100 / slots.length;
-    
-    // Finde Start-Slot
-    let startSlot = 0;
-    for (let i = 0; i < slots.length - 1; i++) {
-      const slotStart = slots[i]?.getTime();
-      const slotEnd = slots[i + 1]?.getTime();
-      if (slotStart && slotEnd && startTime >= slotStart && startTime < slotEnd) {
-        startSlot = i;
-        break;
+    try {
+      const startTime = programme.startDateObj.getTime();
+      if (isNaN(startTime)) {
+        return { left: 0, width: 10 };
       }
-      if (slotStart && startTime < slotStart) break;
+      
+      const slotWidth = 100 / slots.length;
+      
+      // Finde Start-Slot
+      let startSlot = 0;
+      for (let i = 0; i < slots.length - 1; i++) {
+        const slotStart = slots[i]?.getTime();
+        const slotEnd = slots[i + 1]?.getTime();
+        if (slotStart && slotEnd && startTime >= slotStart && startTime < slotEnd) {
+          startSlot = i;
+          break;
+        }
+        if (slotStart && startTime < slotStart) break;
+      }
+      
+      // Sicherstellen, dass startSlot gültig ist
+      if (startSlot >= slots.length) {
+        startSlot = Math.max(0, slots.length - 1);
+      }
+      
+      // Berechne Position innerhalb des Slots
+      const slotStart = slots[startSlot]?.getTime();
+      const slotEnd = slots[startSlot + 1]?.getTime();
+      
+      if (!slotStart) {
+        return { left: 0, width: slotWidth };
+      }
+      
+      const slotDuration = (slotEnd || slotStart + (30 * 60 * 1000)) - slotStart;
+      const offsetInSlot = slotDuration > 0 ? Math.max(0, ((startTime - slotStart) / slotDuration) * slotWidth) : 0;
+      
+      // Berechne Breite basierend auf Dauer
+      const durationMs = (programme.duration || 30) * 60 * 1000;
+      const width = slotDuration > 0 ? Math.max((durationMs / slotDuration) * slotWidth, slotWidth * 0.3) : slotWidth;
+      
+      const left = Math.max(0, Math.min(startSlot * slotWidth + offsetInSlot, 100));
+      const maxWidth = Math.max(5, 100 - left);
+      
+      return {
+        left,
+        width: Math.min(width, maxWidth),
+      };
+    } catch (error) {
+      console.error('Error calculating programme position:', error);
+      return { left: 0, width: 10 };
     }
-    
-    // Berechne Position innerhalb des Slots
-    const slotStart = slots[startSlot]?.getTime() || startTime;
-    const slotEnd = slots[startSlot + 1]?.getTime() || slotStart + (30 * 60 * 1000);
-    const slotDuration = slotEnd - slotStart;
-    const offsetInSlot = slotDuration > 0 ? Math.max(0, ((startTime - slotStart) / slotDuration) * slotWidth) : 0;
-    
-    // Berechne Breite basierend auf Dauer
-    const durationMs = programme.duration * 60 * 1000;
-    const width = slotDuration > 0 ? Math.max((durationMs / slotDuration) * slotWidth, slotWidth * 0.3) : slotWidth;
-    
-    const left = Math.max(0, startSlot * slotWidth + offsetInSlot);
-    const maxWidth = 100 - left;
-    
-    return {
-      left,
-      width: Math.min(width, maxWidth),
-    };
   };
 
   // Verarbeite Kanäle mit Programmen für das Grid
   const processedChannels = useMemo(() => {
-    if (!data || !data.channels || timeSlots.length === 0) return [];
+    if (!data || !data.channels || !Array.isArray(data.channels) || timeSlots.length === 0) {
+      return [];
+    }
     
-    const firstSlot = timeSlots[0]?.getTime() || Date.now();
-    const lastSlot = timeSlots[timeSlots.length - 1]?.getTime() + (30 * 60 * 1000) || Date.now() + (timeWindow * 60 * 60 * 1000);
+    const firstSlot = timeSlots[0]?.getTime();
+    const lastSlot = timeSlots[timeSlots.length - 1]?.getTime();
     
-    return data.channels.map(channel => {
-      const programmes = channel.programmes
-        .map(p => {
-          try {
-            const startDateObj = new Date(p.startDate);
-            if (isNaN(startDateObj.getTime())) {
+    if (!firstSlot || !lastSlot) {
+      return [];
+    }
+    
+    const lastSlotWithBuffer = lastSlot + (30 * 60 * 1000);
+    
+    return data.channels
+      .filter(channel => channel && channel.id && Array.isArray(channel.programmes))
+      .map(channel => {
+        const programmes = (channel.programmes || [])
+          .map(p => {
+            if (!p || !p.startDate) return null;
+            try {
+              const startDateObj = new Date(p.startDate);
+              if (isNaN(startDateObj.getTime())) {
+                return null;
+              }
+              return {
+                ...p,
+                startDateObj,
+              };
+            } catch {
               return null;
             }
-            return {
-              ...p,
-              startDateObj,
-            };
-          } catch {
-            return null;
-          }
-        })
-        .filter((p): p is NonNullable<typeof p> => {
-          if (!p) return false;
-          const progTime = p.startDateObj.getTime();
-          return progTime >= firstSlot && progTime <= lastSlot;
-        })
-        .sort((a, b) => a.startDateObj.getTime() - b.startDateObj.getTime());
-      
-      return {
-        ...channel,
-        programmes,
-      };
-    }).filter(ch => ch.programmes.length > 0);
+          })
+          .filter((p): p is NonNullable<typeof p> => {
+            if (!p || !p.startDateObj) return false;
+            const progTime = p.startDateObj.getTime();
+            return progTime >= firstSlot && progTime <= lastSlotWithBuffer;
+          })
+          .sort((a, b) => a.startDateObj.getTime() - b.startDateObj.getTime());
+        
+        return {
+          ...channel,
+          programmes,
+        };
+      })
+      .filter(ch => ch && ch.programmes && ch.programmes.length > 0);
   }, [data, timeSlots, timeWindow]);
 
   if (loading && !data) {
@@ -278,6 +332,18 @@ export function EpgProgramPreview() {
     return null;
   }
 
+  // Sicherstellen, dass timeSlots nicht leer ist
+  if (!timeSlots || timeSlots.length === 0) {
+    return (
+      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+        <p className="text-slate-400 text-center">Zeitfenster konnte nicht berechnet werden.</p>
+      </div>
+    );
+  }
+
+  const totalChannels = data?.totalChannels ?? 0;
+  const totalProgrammes = data?.totalProgrammes ?? 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -294,7 +360,7 @@ export function EpgProgramPreview() {
           <div>
             <h3 className="text-2xl font-bold text-white tracking-tight">TV Programm</h3>
             <p className="text-slate-400 text-sm mt-1">
-              {data.totalChannels.toLocaleString('de-DE')} Kanäle • {data.totalProgrammes.toLocaleString('de-DE')} Programme
+              {totalChannels.toLocaleString('de-DE')} Kanäle • {totalProgrammes.toLocaleString('de-DE')} Programme
             </p>
           </div>
         </div>
@@ -330,149 +396,171 @@ export function EpgProgramPreview() {
       <div className="overflow-x-auto -mx-8 px-8">
         <div className="min-w-[1200px]">
           {/* Time Header Row - Sticky */}
-          <div 
-            className="grid gap-2 mb-4 sticky top-0 z-20 bg-slate-950/95 backdrop-blur-md pb-3 border-b border-white/10"
-            style={{ gridTemplateColumns: `220px repeat(${timeSlots.length}, minmax(80px, 1fr))` }}
-          >
-            <div className="text-xs font-bold text-slate-300 uppercase tracking-wider px-3 py-3 bg-slate-900/60 rounded-lg">
-              Kanal
-            </div>
-            {timeSlots.map((slot, idx) => (
-              <div
-                key={idx}
-                className="text-center text-xs font-bold text-white px-2 py-3 bg-gradient-to-b from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-lg"
-              >
-                {formatTimeSlot(slot)}
+          {timeSlots.length > 0 && (
+            <div 
+              className="grid gap-2 mb-4 sticky top-0 z-20 bg-slate-950/95 backdrop-blur-md pb-3 border-b border-white/10"
+              style={{ gridTemplateColumns: `220px repeat(${timeSlots.length}, minmax(80px, 1fr))` }}
+            >
+              <div className="text-xs font-bold text-slate-300 uppercase tracking-wider px-3 py-3 bg-slate-900/60 rounded-lg">
+                Kanal
               </div>
-            ))}
-          </div>
+              {timeSlots.map((slot, idx) => {
+                if (!slot) return null;
+                return (
+                  <div
+                    key={idx}
+                    className="text-center text-xs font-bold text-white px-2 py-3 bg-gradient-to-b from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-lg"
+                  >
+                    {formatTimeSlot(slot)}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Channels Grid */}
           <div className="space-y-1">
-            {processedChannels.map((channel, channelIdx) => {
-              const isExpanded = expandedChannels.has(channel.id);
-              
-              return (
-                <motion.div
-                  key={channel.id}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: channelIdx * 0.02 }}
-                  className="grid gap-2"
-                  style={{ gridTemplateColumns: `220px repeat(${timeSlots.length}, minmax(80px, 1fr))` }}
-                >
-                  {/* Channel Name Column */}
-                  <button
-                    onClick={() => toggleChannel(channel.id)}
-                    className="flex items-center space-x-3 px-4 py-4 bg-gradient-to-r from-slate-900/80 to-slate-800/60 rounded-lg hover:from-slate-800/80 hover:to-slate-700/60 transition-all text-left group border border-white/5"
+            {processedChannels && processedChannels.length > 0 ? (
+              processedChannels.map((channel, channelIdx) => {
+                if (!channel || !channel.id) return null;
+                const isExpanded = expandedChannels.has(channel.id);
+                
+                return (
+                  <motion.div
+                    key={channel.id}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: channelIdx * 0.02 }}
+                    className="grid gap-2"
+                    style={{ gridTemplateColumns: timeSlots.length > 0 ? `220px repeat(${timeSlots.length}, minmax(80px, 1fr))` : '220px 1fr' }}
                   >
-                    {channel.icon && (
-                      <img
-                        src={channel.icon}
-                        alt={channel.name}
-                        className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-white/10"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-bold text-white truncate group-hover:text-purple-300 transition-colors">
-                        {channel.name}
+                    {/* Channel Name Column */}
+                    <button
+                      onClick={() => toggleChannel(channel.id)}
+                      className="flex items-center space-x-3 px-4 py-4 bg-gradient-to-r from-slate-900/80 to-slate-800/60 rounded-lg hover:from-slate-800/80 hover:to-slate-700/60 transition-all text-left group border border-white/5"
+                    >
+                      {channel.icon && (
+                        <img
+                          src={channel.icon}
+                          alt={channel.name || 'Channel'}
+                          className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-white/10"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-white truncate group-hover:text-purple-300 transition-colors">
+                          {channel.name || 'Unbekannter Kanal'}
+                        </div>
+                        <div className="text-xs text-slate-400 mt-0.5">
+                          {channel.programmes?.length || 0} Programme
+                        </div>
                       </div>
-                      <div className="text-xs text-slate-400 mt-0.5">
-                        {channel.programmes.length} Programme
-                      </div>
-                    </div>
-                    {isExpanded ? (
-                      <ChevronUpIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                    ) : (
-                      <ChevronDownIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                    )}
-                  </button>
+                      {isExpanded ? (
+                        <ChevronUpIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                      ) : (
+                        <ChevronDownIcon className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                      )}
+                    </button>
 
                   {/* Programme Timeline */}
                   <div className="col-span-full relative h-20 bg-slate-900/40 rounded-lg overflow-hidden border border-white/5">
-                    {channel.programmes.map((programme, progIdx) => {
-                      const position = getProgrammePosition(programme, timeSlots);
-                      return (
-                        <motion.div
-                          key={`${channel.id}-${programme.start}-${progIdx}`}
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: progIdx * 0.03 }}
-                          className="absolute top-1 bottom-1 rounded-md px-2 py-1.5 bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-400/40 hover:from-purple-500/40 hover:to-pink-500/40 hover:border-purple-300/60 transition-all cursor-pointer group shadow-lg"
-                          style={{
-                            left: `${position.left}%`,
-                            width: `${position.width}%`,
-                            minWidth: '80px',
-                            zIndex: progIdx,
-                          }}
-                          title={`${programme.title}\n${programme.startTime} • ${programme.duration} Min${programme.category ? ` • ${programme.category}` : ''}`}
-                        >
-                          <div className="text-xs font-bold text-white truncate mb-0.5 group-hover:text-purple-100">
-                            {programme.title}
-                          </div>
-                          <div className="flex items-center space-x-1.5 text-[10px] text-slate-200">
-                            <ClockIcon className="w-3 h-3" />
-                            <span>{programme.startTime}</span>
-                            {programme.category && (
-                              <>
-                                <span className="text-purple-300">•</span>
-                                <span className="text-purple-300 truncate">{programme.category}</span>
-                              </>
-                            )}
-                          </div>
-                        </motion.div>
-                      );
-                    })}
+                    {channel.programmes && channel.programmes.length > 0 ? (
+                      channel.programmes.map((programme, progIdx) => {
+                        if (!programme || !programme.startDateObj) return null;
+                        const position = getProgrammePosition(programme, timeSlots);
+                        return (
+                          <motion.div
+                            key={`${channel.id}-${programme.start || programme.startDate}-${progIdx}`}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: progIdx * 0.03 }}
+                            className="absolute top-1 bottom-1 rounded-md px-2 py-1.5 bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-400/40 hover:from-purple-500/40 hover:to-pink-500/40 hover:border-purple-300/60 transition-all cursor-pointer group shadow-lg"
+                            style={{
+                              left: `${position.left}%`,
+                              width: `${position.width}%`,
+                              minWidth: '80px',
+                              zIndex: progIdx,
+                            }}
+                            title={`${programme.title || 'Unbekannt'}\n${programme.startTime || ''} • ${programme.duration || 0} Min${programme.category ? ` • ${programme.category}` : ''}`}
+                          >
+                            <div className="text-xs font-bold text-white truncate mb-0.5 group-hover:text-purple-100">
+                              {programme.title || 'Unbekannt'}
+                            </div>
+                            <div className="flex items-center space-x-1.5 text-[10px] text-slate-200">
+                              <ClockIcon className="w-3 h-3" />
+                              <span>{programme.startTime || ''}</span>
+                              {programme.category && (
+                                <>
+                                  <span className="text-purple-300">•</span>
+                                  <span className="text-purple-300 truncate">{programme.category}</span>
+                                </>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-xs">
+                        Keine Programme verfügbar
+                      </div>
+                    )}
                   </div>
 
                   {/* Expanded Details */}
-                  {isExpanded && channel.programmes.length > 0 && (
+                  {isExpanded && channel.programmes && channel.programmes.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       className="col-span-full mt-3 space-y-2"
                     >
-                      {channel.programmes.map((programme, progIdx) => (
-                        <motion.div
-                          key={`detail-${channel.id}-${programme.start}-${progIdx}`}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: progIdx * 0.05 }}
-                          className="bg-gradient-to-r from-slate-900/80 to-slate-800/60 rounded-lg p-4 border border-white/5 hover:border-purple-500/30 transition-all"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-3 mb-2">
-                                <div className="flex items-center space-x-2 px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-lg">
-                                  <ClockIcon className="w-4 h-4 text-purple-300" />
-                                  <span className="text-sm font-bold text-purple-300">{programme.startTime}</span>
-                                  <span className="text-xs text-purple-200">({programme.duration} Min)</span>
+                      {channel.programmes.map((programme, progIdx) => {
+                        if (!programme) return null;
+                        return (
+                          <motion.div
+                            key={`detail-${channel.id}-${programme.start || programme.startDate}-${progIdx}`}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: progIdx * 0.05 }}
+                            className="bg-gradient-to-r from-slate-900/80 to-slate-800/60 rounded-lg p-4 border border-white/5 hover:border-purple-500/30 transition-all"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <div className="flex items-center space-x-2 px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-lg">
+                                    <ClockIcon className="w-4 h-4 text-purple-300" />
+                                    <span className="text-sm font-bold text-purple-300">{programme.startTime || '--:--'}</span>
+                                    <span className="text-xs text-purple-200">({programme.duration || 0} Min)</span>
+                                  </div>
+                                  {programme.category && (
+                                    <span className="px-2 py-1 bg-pink-500/20 border border-pink-500/30 text-pink-300 text-xs font-semibold rounded-lg">
+                                      {programme.category}
+                                    </span>
+                                  )}
                                 </div>
-                                {programme.category && (
-                                  <span className="px-2 py-1 bg-pink-500/20 border border-pink-500/30 text-pink-300 text-xs font-semibold rounded-lg">
-                                    {programme.category}
-                                  </span>
+                                <h4 className="text-white font-bold text-lg mb-2">{programme.title || 'Unbekannt'}</h4>
+                                {programme.description && (
+                                  <p className="text-slate-300 text-sm leading-relaxed">
+                                    {programme.description}
+                                  </p>
                                 )}
                               </div>
-                              <h4 className="text-white font-bold text-lg mb-2">{programme.title}</h4>
-                              {programme.description && (
-                                <p className="text-slate-300 text-sm leading-relaxed">
-                                  {programme.description}
-                                </p>
-                              )}
                             </div>
-                          </div>
-                        </motion.div>
-                      ))}
+                          </motion.div>
+                        );
+                      })}
                     </motion.div>
                   )}
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })
+            ) : (
+              <div className="col-span-full text-center py-12 text-slate-400">
+                <p>Keine Programme für den ausgewählten Zeitraum verfügbar.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -480,8 +568,8 @@ export function EpgProgramPreview() {
       {/* Footer Info */}
       <div className="mt-8 pt-6 border-t border-white/10">
         <p className="text-xs text-slate-400 text-center">
-          Zeigt {processedChannels.length} von {data.totalChannels} Kanälen • 
-          Generiert: {new Date(data.generatedAt).toLocaleString('de-DE')}
+          Zeigt {processedChannels.length} von {totalChannels} Kanälen • 
+          {data?.generatedAt && ` Generiert: ${new Date(data.generatedAt).toLocaleString('de-DE')}`}
         </p>
       </div>
     </motion.div>
