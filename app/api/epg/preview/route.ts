@@ -107,7 +107,7 @@ export async function GET(request: Request) {
       );
     });
     
-    // Erstelle Preview-Daten
+    // Erstelle Preview-Daten für ALLE Kanäle (keine Begrenzung)
     // Sortiere Kanäle nach Anzahl der Programme (Kanäle mit mehr Programmen zuerst)
     const channelsWithProgrammes = channels
       .map((channel: any) => {
@@ -115,8 +115,23 @@ export async function GET(request: Request) {
         const programmeCount = (programmesByChannel[channelId] || []).length;
         return { channel, programmeCount };
       })
-      .sort((a: { channel: any; programmeCount: number }, b: { channel: any; programmeCount: number }) => b.programmeCount - a.programmeCount)
-      .slice(0, 20);
+      .sort((a: { channel: any; programmeCount: number }, b: { channel: any; programmeCount: number }) => {
+        // Zuerst nach Programm-Anzahl, dann alphabetisch
+        if (b.programmeCount !== a.programmeCount) {
+          return b.programmeCount - a.programmeCount;
+        }
+        const nameA = Array.isArray(a.channel['display-name'])
+          ? a.channel['display-name'][0]
+          : typeof a.channel['display-name'] === 'string'
+          ? a.channel['display-name']
+          : a.channel['display-name']?.['#text'] || '';
+        const nameB = Array.isArray(b.channel['display-name'])
+          ? b.channel['display-name'][0]
+          : typeof b.channel['display-name'] === 'string'
+          ? b.channel['display-name']
+          : b.channel['display-name']?.['#text'] || '';
+        return nameA.localeCompare(nameB);
+      });
     
     const previewData = channelsWithProgrammes.map(({ channel }: { channel: any; programmeCount: number }) => {
       const channelId = channel['@_id'];
@@ -127,7 +142,7 @@ export async function GET(request: Request) {
         : channel['display-name']?.['#text'] || channelId;
       
       const channelProgrammes = (programmesByChannel[channelId] || [])
-        .slice(0, limit)
+        .slice(0, limit * 2) // Mehr Programme für TV-Zeitschriften-Layout
         .map((prog: any) => {
           const title = typeof prog.title === 'string' 
             ? prog.title 
