@@ -118,7 +118,7 @@ export async function GET(request: Request) {
       .sort((a: { channel: any; programmeCount: number }, b: { channel: any; programmeCount: number }) => b.programmeCount - a.programmeCount)
       .slice(0, 20);
     
-    const previewData = channelsWithProgrammes.map(({ channel }) => {
+    const previewData = channelsWithProgrammes.map(({ channel }: { channel: any; programmeCount: number }) => {
       const channelId = channel['@_id'];
       const channelName = Array.isArray(channel['display-name'])
         ? channel['display-name'][0]
