@@ -133,6 +133,10 @@ export function EpgProgramPreview() {
   };
 
   const getProgrammePosition = (programme: Programme, slots: Date[]) => {
+    if (!slots || slots.length === 0) {
+      return { left: 0, width: 10 };
+    }
+    
     const startDate = new Date(programme.startDate);
     const startTime = startDate.getTime();
     const slotWidth = 100 / slots.length;
@@ -140,43 +144,60 @@ export function EpgProgramPreview() {
     // Finde Start-Slot
     let startSlot = 0;
     for (let i = 0; i < slots.length - 1; i++) {
-      if (startTime >= slots[i].getTime() && startTime < slots[i + 1].getTime()) {
+      const slotStart = slots[i]?.getTime();
+      const slotEnd = slots[i + 1]?.getTime();
+      if (slotStart && slotEnd && startTime >= slotStart && startTime < slotEnd) {
         startSlot = i;
         break;
       }
-      if (startTime < slots[i].getTime()) break;
+      if (slotStart && startTime < slotStart) break;
     }
     
     // Berechne Position innerhalb des Slots
     const slotStart = slots[startSlot]?.getTime() || startTime;
     const slotEnd = slots[startSlot + 1]?.getTime() || slotStart + (30 * 60 * 1000);
     const slotDuration = slotEnd - slotStart;
-    const offsetInSlot = Math.max(0, ((startTime - slotStart) / slotDuration) * slotWidth);
+    const offsetInSlot = slotDuration > 0 ? Math.max(0, ((startTime - slotStart) / slotDuration) * slotWidth) : 0;
     
     // Berechne Breite basierend auf Dauer
     const durationMs = programme.duration * 60 * 1000;
-    const width = Math.max((durationMs / slotDuration) * slotWidth, slotWidth * 0.3);
+    const width = slotDuration > 0 ? Math.max((durationMs / slotDuration) * slotWidth, slotWidth * 0.3) : slotWidth;
+    
+    const left = Math.max(0, startSlot * slotWidth + offsetInSlot);
+    const maxWidth = 100 - left;
     
     return {
-      left: Math.max(0, startSlot * slotWidth + offsetInSlot),
-      width: Math.min(width, 100 - (startSlot * slotWidth + offsetInSlot)),
+      left,
+      width: Math.min(width, maxWidth),
     };
   };
 
   // Verarbeite Kanäle mit Programmen für das Grid
   const processedChannels = useMemo(() => {
-    if (!data) return [];
+    if (!data || !data.channels || timeSlots.length === 0) return [];
+    
+    const firstSlot = timeSlots[0]?.getTime() || Date.now();
+    const lastSlot = timeSlots[timeSlots.length - 1]?.getTime() + (30 * 60 * 1000) || Date.now() + (timeWindow * 60 * 60 * 1000);
     
     return data.channels.map(channel => {
       const programmes = channel.programmes
-        .map(p => ({
-          ...p,
-          startDateObj: new Date(p.startDate),
-        }))
-        .filter(p => {
+        .map(p => {
+          try {
+            const startDateObj = new Date(p.startDate);
+            if (isNaN(startDateObj.getTime())) {
+              return null;
+            }
+            return {
+              ...p,
+              startDateObj,
+            };
+          } catch {
+            return null;
+          }
+        })
+        .filter((p): p is NonNullable<typeof p> => {
+          if (!p) return false;
           const progTime = p.startDateObj.getTime();
-          const firstSlot = timeSlots[0]?.getTime() || Date.now();
-          const lastSlot = timeSlots[timeSlots.length - 1]?.getTime() + (30 * 60 * 1000) || Date.now() + (timeWindow * 60 * 60 * 1000);
           return progTime >= firstSlot && progTime <= lastSlot;
         })
         .sort((a, b) => a.startDateObj.getTime() - b.startDateObj.getTime());
@@ -309,7 +330,10 @@ export function EpgProgramPreview() {
       <div className="overflow-x-auto -mx-8 px-8">
         <div className="min-w-[1200px]">
           {/* Time Header Row - Sticky */}
-          <div className="grid grid-cols-[220px_repeat(var(--slot-count),1fr)] gap-2 mb-4 sticky top-0 z-20 bg-slate-950/95 backdrop-blur-md pb-3 border-b border-white/10" style={{ '--slot-count': timeSlots.length } as React.CSSProperties}>
+          <div 
+            className="grid gap-2 mb-4 sticky top-0 z-20 bg-slate-950/95 backdrop-blur-md pb-3 border-b border-white/10"
+            style={{ gridTemplateColumns: `220px repeat(${timeSlots.length}, minmax(80px, 1fr))` }}
+          >
             <div className="text-xs font-bold text-slate-300 uppercase tracking-wider px-3 py-3 bg-slate-900/60 rounded-lg">
               Kanal
             </div>
@@ -335,7 +359,7 @@ export function EpgProgramPreview() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: channelIdx * 0.02 }}
                   className="grid gap-2"
-                  style={{ gridTemplateColumns: `220px repeat(${timeSlots.length}, 1fr)` }}
+                  style={{ gridTemplateColumns: `220px repeat(${timeSlots.length}, minmax(80px, 1fr))` }}
                 >
                   {/* Channel Name Column */}
                   <button
