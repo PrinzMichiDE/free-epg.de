@@ -12,7 +12,6 @@ import { FaqSection } from '@/components/faq-section';
 import { KoFiSupport } from '@/components/kofi-support';
 import { KoFiFloatingButton } from '@/components/kofi-floating-button';
 import { LanguageSwitcher } from '@/components/language-switcher';
-import { EpgProgramPreview } from '@/components/epg-program-preview';
 import { SignalIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useTranslations } from '@/hooks/use-translations';
 import Script from 'next/script';
@@ -163,10 +162,6 @@ export default function HomePage() {
           <IptvLinkCard />
         </div>
 
-        {/* EPG Program Preview - Prominent */}
-        <div className="mb-16">
-          <EpgProgramPreview />
-        </div>
 
         {/* Key Benefits - Simplified */}
         <div className="mb-16">
