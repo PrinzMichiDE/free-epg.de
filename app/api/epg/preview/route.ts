@@ -147,6 +147,15 @@ export async function GET(request: Request) {
           const startTime = prog['@_start'];
           const startDate = parseXmlTvTime(startTime);
           
+          // Berechne Dauer in Minuten
+          const stopTime = prog['@_stop'];
+          let duration = 30; // Default 30 Minuten
+          if (stopTime) {
+            const stopDate = parseXmlTvTime(stopTime);
+            duration = Math.round((stopDate.getTime() - startDate.getTime()) / (1000 * 60));
+            if (duration <= 0 || duration > 240) duration = 30; // Fallback wenn ungültig
+          }
+          
           return {
             title: title || 'Unbekannt',
             description: desc || '',
@@ -160,6 +169,8 @@ export async function GET(request: Request) {
               minute: '2-digit',
             }),
             startTime: startDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+            startDate: startDate.toISOString(), // Als ISO String für Client
+            duration: duration,
           };
         });
       
