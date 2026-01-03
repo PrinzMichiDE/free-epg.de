@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       ? parsed.tv.programme
       : parsed.tv.programme ? [parsed.tv.programme] : [];
     
-    // Aktuelle Zeit
+    // Aktuelle Zeit (UTC)
     const now = new Date();
     // Erstelle Timestamp im XMLTV Format (YYYYMMDDHHmmss)
     const nowYear = now.getUTCFullYear();
@@ -56,6 +56,17 @@ export async function GET(request: Request) {
     const nowMinute = String(now.getUTCMinutes()).padStart(2, '0');
     const nowSecond = String(now.getUTCSeconds()).padStart(2, '0');
     const nowTimestamp = `${nowYear}${nowMonth}${nowDay}${nowHour}${nowMinute}${nowSecond}`;
+    
+    // Zeitpunkt für die nächsten 24 Stunden (für bessere Abdeckung)
+    const tomorrow = new Date(now);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    const tomorrowYear = tomorrow.getUTCFullYear();
+    const tomorrowMonth = String(tomorrow.getUTCMonth() + 1).padStart(2, '0');
+    const tomorrowDay = String(tomorrow.getUTCDate()).padStart(2, '0');
+    const tomorrowHour = String(tomorrow.getUTCHours()).padStart(2, '0');
+    const tomorrowMinute = String(tomorrow.getUTCMinutes()).padStart(2, '0');
+    const tomorrowSecond = String(tomorrow.getUTCSeconds()).padStart(2, '0');
+    const tomorrowTimestamp = `${tomorrowYear}${tomorrowMonth}${tomorrowDay}${tomorrowHour}${tomorrowMinute}${tomorrowSecond}`;
     
     // Programme nach Kanal gruppieren und filtern (nur aktuelle und kommende)
     const programmesByChannel: Record<string, any[]> = {};
@@ -76,9 +87,9 @@ export async function GET(request: Request) {
       const stopTimestamp = stopTime ? stopTime.split(' ')[0] : null;
       
       // Nimm Programm wenn:
-      // 1. Start-Zeit ist in der Zukunft ODER
+      // 1. Start-Zeit ist in der Zukunft (bis zu 24h) ODER
       // 2. Programm läuft gerade (Start < jetzt < Stop)
-      const isUpcoming = startTimestamp >= nowTimestamp;
+      const isUpcoming = startTimestamp >= nowTimestamp && startTimestamp <= tomorrowTimestamp;
       const isCurrent = stopTimestamp && startTimestamp < nowTimestamp && stopTimestamp > nowTimestamp;
       
       if (isUpcoming || isCurrent) {
@@ -97,7 +108,17 @@ export async function GET(request: Request) {
     });
     
     // Erstelle Preview-Daten
-    const previewData = channels.slice(0, 20).map((channel: any) => {
+    // Sortiere Kanäle nach Anzahl der Programme (Kanäle mit mehr Programmen zuerst)
+    const channelsWithProgrammes = channels
+      .map((channel: any) => {
+        const channelId = channel['@_id'];
+        const programmeCount = (programmesByChannel[channelId] || []).length;
+        return { channel, programmeCount };
+      })
+      .sort((a, b) => b.programmeCount - a.programmeCount)
+      .slice(0, 20);
+    
+    const previewData = channelsWithProgrammes.map(({ channel }) => {
       const channelId = channel['@_id'];
       const channelName = Array.isArray(channel['display-name'])
         ? channel['display-name'][0]
@@ -118,16 +139,18 @@ export async function GET(request: Request) {
           
           const category = Array.isArray(prog.category)
             ? prog.category[0]
-            : prog.category || '';
+            : typeof prog.category === 'string'
+            ? prog.category
+            : '';
           
           // Parse Start-Zeit
           const startTime = prog['@_start'];
           const startDate = parseXmlTvTime(startTime);
           
           return {
-            title,
-            description: desc,
-            category,
+            title: title || 'Unbekannt',
+            description: desc || '',
+            category: category || '',
             start: startTime,
             startFormatted: startDate.toLocaleString('de-DE', {
               day: '2-digit',
@@ -184,22 +207,32 @@ export async function GET(request: Request) {
  * Parst XMLTV Zeitformat (YYYYMMDDHHmmss +0000) zu Date
  */
 function parseXmlTvTime(timeStr: string): Date {
+  if (!timeStr) return new Date();
+  
   // Format: YYYYMMDDHHmmss +0000 oder YYYYMMDDHHmmss
-  const match = timeStr.match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\s+[+-]\d{4})?$/);
+  // Extrahiere nur den Zeitstempel-Teil (vor dem Leerzeichen)
+  const timestampPart = timeStr.split(' ')[0];
+  const match = timestampPart.match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})$/);
   
   if (match) {
     const [, year, month, day, hour, minute, second] = match;
-    return new Date(
+    // Verwende UTC für konsistente Zeitzone
+    return new Date(Date.UTC(
       parseInt(year),
       parseInt(month) - 1,
       parseInt(day),
       parseInt(hour),
       parseInt(minute),
       parseInt(second) || 0
-    );
+    ));
   }
   
-  return new Date();
+  // Fallback: Versuche ISO String zu parsen
+  try {
+    return new Date(timeStr);
+  } catch {
+    return new Date();
+  }
 }
 
 export const dynamic = 'force-dynamic';
