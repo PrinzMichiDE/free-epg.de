@@ -115,7 +115,7 @@ export async function GET(request: Request) {
         const programmeCount = (programmesByChannel[channelId] || []).length;
         return { channel, programmeCount };
       })
-      .sort((a, b) => b.programmeCount - a.programmeCount)
+      .sort((a: { channel: any; programmeCount: number }, b: { channel: any; programmeCount: number }) => b.programmeCount - a.programmeCount)
       .slice(0, 20);
     
     const previewData = channelsWithProgrammes.map(({ channel }) => {
