@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     // Reduziert Bundle Size
     optimizePackageImports: ['pako'],
   },
+  output: 'standalone',
 };
 
 export default nextConfig;
